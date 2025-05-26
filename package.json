@@ -1,0 +1,48 @@
+{
+  "name": "preact-missing-hooks",
+  "version": "1.0.0",
+  "description": "A lightweight, extendable collection of missing React-like hooks for Preact",
+  "author": "Prakhar Dubey",
+  "license": "ISC",
+  "main": "dist/index.js",
+  "module": "dist/index.module.js",
+  "types": "dist/index.d.ts",
+  "source": "src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.module.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./useTransition": {
+      "import": "./dist/useTransition.module.js",
+      "require": "./dist/useTransition.js",
+      "types": "./dist/useTransition.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "microbundle",
+    "dev": "microbundle watch",
+    "prepublishOnly": "npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "preact",
+    "hooks",
+    "usetransition",
+    "react-hooks",
+    "microbundle",
+    "typescript",
+    "preact-hooks"
+  ],
+  "dependencies": {
+    "preact": "^10.26.7"
+  },
+  "devDependencies": {
+    "microbundle": "^0.15.1",
+    "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "preact": ">=10.0.0"
+  }
+}
