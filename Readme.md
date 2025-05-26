@@ -1,6 +1,6 @@
 # Preact Missing Hooks
 
-A lightweight, extendable collection of missing React-like hooks for Preact, starting with `useTransition`.
+A lightweight, extendable collection of missing React-like hooks for Preact — plus fresh, powerful new ones designed specifically for modern Preact apps..
 
 ---
 
@@ -71,31 +71,13 @@ Returns a tuple:
 
 ## 🧩 Future Hooks (Planned)
 
-* `useDebounce`
-* `useThrottle`
-* `useIdleCallback`
-
+* `useMutationObserver`: For observing changes in DOM mutations.
 ---
 
-## 📤 Publishing
-
-Build before publishing:
-
-```bash
-npm run build
-```
-
-Then:
-
-```bash
-npm publish --access public
-```
-
----
 
 ## 📝 License
 
-ISC © [Prakhar Dubey](https://github.com/your-profile)
+ISC © [Prakhar Dubey](https://github.com/prakhardubey2002)
 
 ---
 
