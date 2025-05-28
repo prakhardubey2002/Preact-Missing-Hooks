@@ -1,5 +1,31 @@
 # Preact Missing Hooks
+<p align="left">
+  <!-- 📦 Package Info -->
+  <a href="https://www.npmjs.com/package/preact-missing-hooks">
+    <img src="https://img.shields.io/npm/v/preact-missing-hooks?color=crimson&label=npm%20version" alt="npm version" />
+  </a>
+  <a href="https://www.npmjs.com/package/preact-missing-hooks">
+    <img src="https://img.shields.io/npm/dm/preact-missing-hooks?label=monthly%20downloads" alt="npm downloads" />
+  </a>
 
+  <!-- 🛠️ GitHub Info -->
+  <a href="https://github.com/prakhardubey2002/preact-missing-hooks/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/prakhardubey2002/preact-missing-hooks?color=blueviolet" alt="license" />
+  </a>
+  <a href="https://github.com/prakhardubey2002/preact-missing-hooks/stargazers">
+    <img src="https://img.shields.io/github/stars/prakhardubey2002/preact-missing-hooks?style=social" alt="GitHub stars" />
+  </a>
+
+  <!-- ✅ Build & CI (Optional) -->
+  <a href="https://github.com/prakhardubey2002/preact-missing-hooks/actions">
+    <img src="https://img.shields.io/github/actions/workflow/status/prakhardubey2002/preact-missing-hooks/ci.yml?branch=main&label=build" alt="Build Status" />
+  </a>
+
+  <!-- 📊 Coverage (Optional if setup) -->
+  <a href="https://codecov.io/gh/prakhardubey2002/preact-missing-hooks">
+    <img src="https://codecov.io/gh/prakhardubey2002/preact-missing-hooks/branch/main/graph/badge.svg?token=YOUR_TOKEN_HERE" alt="codecov" />
+  </a>
+</p>
 A lightweight, extendable collection of missing React-like hooks for Preact — plus fresh, powerful new ones designed specifically for modern Preact apps..
 
 ---
