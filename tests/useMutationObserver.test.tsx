@@ -1,12 +1,13 @@
 /** @jsx h */
-import { render } from '@testing-library/preact'
 import { h } from 'preact'
+import { render } from '@testing-library/preact'
 import { useEffect, useRef } from 'preact/hooks'
 import { useMutationObserver } from '../src/useMutationObserver'
 import { vi } from 'vitest'
+import { waitFor } from '@testing-library/preact'
 
 describe('useMutationObserver', () => {
-  it('triggers callback on DOM mutation', () => {
+  it('triggers callback on DOM mutation', async () => {
     const callback = vi.fn()
 
     function TestComponent() {
@@ -27,7 +28,8 @@ describe('useMutationObserver', () => {
 
     render(<TestComponent />)
 
-    // Give MutationObserver time to process
-    expect(callback).toHaveBeenCalled()
+    await waitFor(() => {
+      expect(callback).toHaveBeenCalled()
+    })
   })
 })

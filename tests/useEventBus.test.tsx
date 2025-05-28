@@ -1,29 +1,28 @@
 /** @jsx h */
-import { h } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
-import { render, fireEvent, screen } from '@testing-library/preact';
-import { useEventBus } from '../src/useEventBus';
+import { h } from 'preact'
+import { render, fireEvent, screen } from '@testing-library/preact'
+import { useEventBus } from '../src/useEventBus'
+import { useEffect, useState } from 'preact/hooks'
 
 type Events = {
-  'notify': (msg: string) => void;
-};
+  notify: (msg: string) => void
+}
 
 function Sender() {
-  const { emit } = useEventBus<Events>();
-
-  return <button onClick={() => emit('notify', 'hello')}>Send</button>;
+  const { emit } = useEventBus<Events>()
+  return <button onClick={() => emit('notify', 'hello')}>Send</button>
 }
 
 function Receiver() {
-  const { on } = useEventBus<Events>();
-  const [message, setMessage] = useState('');
+  const { on } = useEventBus<Events>()
+  const [message, setMessage] = useState('')
 
   useEffect(() => {
-    const unsub = on('notify', setMessage);
-    return unsub;
-  }, []);
+    const unsub = on('notify', setMessage)
+    return unsub
+  }, [on])
 
-  return <div>{message}</div>;
+  return <div>{message}</div>
 }
 
 test('useEventBus sends and receives events', () => {
@@ -32,8 +31,11 @@ test('useEventBus sends and receives events', () => {
       <Sender />
       <Receiver />
     </div>
-  );
+  )
 
-  fireEvent.click(screen.getByText('Send'));
-  expect(screen.getByText('hello')).toBeInTheDocument();
-});
+  fireEvent.click(screen.getByText('Send'))
+
+  const node = screen.getByText('hello')
+  expect(node).not.toBeNull()
+  expect(node.textContent).toBe('hello')
+})
