@@ -1,6 +1,6 @@
 # Preact Missing Hooks
+
 <p align="left">
-  <!-- 📦 Package Info -->
   <a href="https://www.npmjs.com/package/preact-missing-hooks">
     <img src="https://img.shields.io/npm/v/preact-missing-hooks?color=crimson&label=npm%20version" alt="npm version" />
   </a>
@@ -8,34 +8,22 @@
     <img src="https://img.shields.io/npm/dm/preact-missing-hooks?label=monthly%20downloads" alt="npm downloads" />
   </a>
 
-  <!-- 🛠️ GitHub Info -->
-  <a href="https://github.com/prakhardubey2002/preact-missing-hooks/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/prakhardubey2002/preact-missing-hooks?color=blueviolet" alt="license" />
-  </a>
-  <a href="https://github.com/prakhardubey2002/preact-missing-hooks/stargazers">
-    <img src="https://img.shields.io/github/stars/prakhardubey2002/preact-missing-hooks?style=social" alt="GitHub stars" />
-  </a>
-
-  <!-- ✅ Build & CI (Optional) -->
-  <a href="https://github.com/prakhardubey2002/preact-missing-hooks/actions">
-    <img src="https://img.shields.io/github/actions/workflow/status/prakhardubey2002/preact-missing-hooks/ci.yml?branch=main&label=build" alt="Build Status" />
-  </a>
-
-  <!-- 📊 Coverage (Optional if setup) -->
-  <a href="https://codecov.io/gh/prakhardubey2002/preact-missing-hooks">
-    <img src="https://codecov.io/gh/prakhardubey2002/preact-missing-hooks/branch/main/graph/badge.svg?token=YOUR_TOKEN_HERE" alt="codecov" />
+  <a href="https://github.com/prakhardubey2002/preact-missing-hooks/actions/workflows/test-hooks.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/prakhardubey2002/preact-missing-hooks/test-hooks.yml?branch=main&label=build%20status" alt="Build Status" />
   </a>
 </p>
-A lightweight, extendable collection of missing React-like hooks for Preact — plus fresh, powerful new ones designed specifically for modern Preact apps..
+
+A lightweight, extendable collection of React-like hooks for Preact, including utilities for transitions, DOM mutation observation, and global event buses.
 
 ---
 
 ## ✨ Features
 
-* **🔄 `useTransition`**: Mimics React's `useTransition` for deferring state updates.
+* **🔄 `useTransition`** — Defers state updates to yield a smoother UI experience.
+* **🔍 `useMutationObserver`** — Reactively observes DOM changes with a familiar hook API.
+* **📡 `useEventBus`** — A simple publish/subscribe system, eliminating props drilling or overuse of context.
 * ✅ Fully TypeScript compatible
 * 📦 Bundled with Microbundle
-* 🔌 Easily extensible — more hooks can be added in future
 * ⚡ Zero dependencies (except `preact`)
 
 ---
@@ -54,36 +42,113 @@ npm install preact
 
 ---
 
-## 🔧 Usage
+## 🔧 Usage Examples
+
+### `useTransition`
 
 ```tsx
 import { useTransition } from 'preact-missing-hooks';
 
-const Example = () => {
-  const [isPending, startTransition] = useTransition();
+function ExampleTransition() {
+  const [startTransition, isPending] = useTransition();
 
   const handleClick = () => {
     startTransition(() => {
-      // Expensive update here
+      // perform an expensive update here
     });
   };
 
   return (
     <button onClick={handleClick} disabled={isPending}>
-      {isPending ? 'Loading...' : 'Click me'}
+      {isPending ? 'Loading...' : 'Click Me'}
     </button>
   );
-};
+}
 ```
 
 ---
 
-## 🔍 API: `useTransition()`
+### `useMutationObserver`
 
-Returns a tuple:
+```tsx
+import { useRef } from 'preact/hooks';
+import { useMutationObserver } from 'preact-missing-hooks';
 
-* `startTransition(fn: () => void)` — schedules a low-priority update
-* `isPending: boolean` — `true` while the transition is in progress
+function ExampleMutation() {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useMutationObserver(ref, (mutations) => {
+    console.log('Detected mutations:', mutations);
+  }, { childList: true, subtree: true });
+
+  return <div ref={ref}>Observe this content</div>;
+}
+```
+
+---
+
+### `useEventBus`
+
+```tsx
+// types.ts
+export type Events = {
+  notify: (message: string) => void;
+};
+
+// Sender.tsx
+import { useEventBus } from 'preact-missing-hooks';
+import type { Events } from './types';
+
+function Sender() {
+  const { emit } = useEventBus<Events>();
+  return <button onClick={() => emit('notify', 'Hello World!')}>Send</button>;
+}
+
+// Receiver.tsx
+import { useEventBus } from 'preact-missing-hooks';
+import { useState, useEffect } from 'preact/hooks';
+import type { Events } from './types';
+
+function Receiver() {
+  const [msg, setMsg] = useState<string>('');
+  const { on } = useEventBus<Events>();
+
+  useEffect(() => {
+    const unsubscribe = on('notify', setMsg);
+    return unsubscribe;
+  }, []);
+
+  return <div>Message: {msg}</div>;
+}
+```
+
+---
+
+## 🧪 Testing
+
+A GitHub Actions workflow automatically runs TypeScript checks and tests on every push and pull request:
+
+```yaml
+# .github/workflows/test-hooks.yml
+name: Test Preact Hooks
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run type-check
+      - run: npm run test
+```
 
 ---
 
@@ -91,15 +156,10 @@ Returns a tuple:
 
 * [Preact](https://preactjs.com)
 * [Microbundle](https://github.com/developit/microbundle)
-* [TypeScript](https://www.typescriptlang.org/)
+* [TypeScript](https://www.typescriptlang.org)
+* [Vitest](https://vitest.dev) for testing
 
 ---
-
-## 🧩 Future Hooks (Planned)
-
-* `useMutationObserver`: For observing changes in DOM mutations.
----
-
 
 ## 📝 License
 
@@ -109,11 +169,4 @@ ISC © [Prakhar Dubey](https://github.com/prakhardubey2002)
 
 ## 📬 Contributing
 
-Feel free to open issues or submit PRs to suggest or contribute additional hooks!
-
----
-
-## 📎 Related
-
-* [React useTransition Docs](https://react.dev/reference/react/useTransition)
-* [Preact Documentation](https://preactjs.com/guide/v10/getting-started/)
+Contributions are welcome! Please open issues or submit PRs with new hooks or improvements.
