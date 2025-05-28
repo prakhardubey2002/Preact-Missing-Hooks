@@ -34,12 +34,6 @@ A lightweight, extendable collection of React-like hooks for Preact, including u
 npm install preact-missing-hooks
 ```
 
-Ensure `preact` is installed in your project:
-
-```bash
-npm install preact
-```
-
 ---
 
 ## 🔧 Usage Examples
