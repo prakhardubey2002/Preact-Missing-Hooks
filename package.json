@@ -31,6 +31,8 @@
     "preact",
     "hooks",
     "usetransition",
+    "useMutationObserver",
+    "useEventBus",
     "react-hooks",
     "microbundle",
     "typescript",
