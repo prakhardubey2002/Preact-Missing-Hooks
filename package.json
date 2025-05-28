@@ -3,7 +3,7 @@
   "version": "1.0.2",
   "description": "A lightweight, extendable collection of missing React-like hooks for Preact — plus fresh, powerful new ones designed specifically for modern Preact apps.",
   "author": "Prakhar Dubey",
-  "license": "ISC",
+  "license": "MIT",
   "main": "dist/index.js",
   "module": "dist/index.module.js",
   "types": "dist/index.d.ts",

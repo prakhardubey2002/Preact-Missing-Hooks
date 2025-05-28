@@ -124,33 +124,6 @@ function Receiver() {
 
 ---
 
-## 🧪 Testing
-
-A GitHub Actions workflow automatically runs TypeScript checks and tests on every push and pull request:
-
-```yaml
-# .github/workflows/test-hooks.yml
-name: Test Preact Hooks
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run type-check
-      - run: npm run test
-```
-
----
 
 ## 🛠 Built With
 
@@ -163,7 +136,7 @@ jobs:
 
 ## 📝 License
 
-ISC © [Prakhar Dubey](https://github.com/prakhardubey2002)
+MIT © [Prakhar Dubey](https://github.com/prakhardubey2002)
 
 ---
 
