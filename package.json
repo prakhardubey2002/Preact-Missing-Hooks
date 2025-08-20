@@ -33,6 +33,7 @@
     "usetransition",
     "useMutationObserver",
     "useEventBus",
+    "useWrappedChildren",
     "react-hooks",
     "microbundle",
     "typescript",
