@@ -5,9 +5,6 @@
     <img src="https://img.shields.io/npm/v/preact-missing-hooks?color=crimson&label=npm%20version" alt="npm version" />
   </a>
   <a href="https://www.npmjs.com/package/preact-missing-hooks">
-    <img src="https://img.shields.io/npm/dm/preact-missing-hooks?label=monthly%20downloads" alt="monthly downloads" />
-  </a>
-  <a href="https://www.npmjs.com/package/preact-missing-hooks">
     <img src="https://img.shields.io/npm/dt/preact-missing-hooks?label=total%20downloads" alt="total downloads" />
   </a>
 
@@ -20,22 +17,22 @@ A lightweight, extendable collection of React-like hooks for Preact, including u
 
 ---
 
-## ✨ Features
+## Features
 
-- **🔄 `useTransition`** — Defers state updates to yield a smoother UI experience.
-- **🔍 `useMutationObserver`** — Reactively observes DOM changes with a familiar hook API.
-- **📡 `useEventBus`** — A simple publish/subscribe system, eliminating props drilling or overuse of context.
-- **🎁 `useWrappedChildren`** — Injects props into child components with flexible merging strategies.
-- **🌓 `usePreferredTheme`** — Detects the user's preferred color scheme (light/dark) from system preferences.
-- **📶 `useNetworkState`** — Tracks online/offline status and connection details (type, downlink, RTT, save-data).
-- **📋 `useClipboard`** — Copy and paste text with the Clipboard API, with copied/error state.
-- ✅ Fully TypeScript compatible
-- 📦 Bundled with Microbundle
-- ⚡ Zero dependencies (except `preact`)
+- **`useTransition`** — Defers state updates to yield a smoother UI experience.
+- **`useMutationObserver`** — Reactively observes DOM changes with a familiar hook API.
+- **`useEventBus`** — A simple publish/subscribe system, eliminating props drilling or overuse of context.
+- **`useWrappedChildren`** — Injects props into child components with flexible merging strategies.
+- **`usePreferredTheme`** — Detects the user's preferred color scheme (light/dark) from system preferences.
+- **`useNetworkState`** — Tracks online/offline status and connection details (type, downlink, RTT, save-data).
+- **`useClipboard`** — Copy and paste text with the Clipboard API, with copied/error state.
+- Fully TypeScript compatible
+- Bundled with Microbundle
+- Zero dependencies (except `preact`)
 
 ---
 
-## 📦 Installation
+## Installation
 
 ```bash
 npm install preact-missing-hooks
@@ -43,7 +40,7 @@ npm install preact-missing-hooks
 
 ---
 
-## 🔧 Usage Examples
+## Usage Examples
 
 ### `useTransition`
 
@@ -242,7 +239,7 @@ function PasteInput() {
 
 ---
 
-## 🛠 Built With
+## Built With
 
 - [Preact](https://preactjs.com)
 - [Microbundle](https://github.com/developit/microbundle)
@@ -251,12 +248,12 @@ function PasteInput() {
 
 ---
 
-## 📝 License
+## License
 
 MIT © [Prakhar Dubey](https://github.com/prakhardubey2002)
 
 ---
 
-## 📬 Contributing
+## Contributing
 
 Contributions are welcome! Please open issues or submit PRs with new hooks or improvements.
