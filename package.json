@@ -1,6 +1,6 @@
 {
   "name": "preact-missing-hooks",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A lightweight, extendable collection of missing React-like hooks for Preact — plus fresh, powerful new ones designed specifically for modern Preact apps.",
   "author": "Prakhar Dubey",
   "license": "MIT",
