@@ -15,7 +15,7 @@
 
 If this package helps you, please consider dropping a star on the [GitHub repo](https://github.com/prakhardubey2002/Preact-Missing-Hooks).
 
-A lightweight, extendable collection of React-like hooks for Preact, including utilities for transitions, DOM mutation observation, global event buses, theme detection, network status, and clipboard access.
+A lightweight, extendable collection of React-like hooks for Preact, including utilities for transitions, DOM mutation observation, global event buses, theme detection, network status, clipboard access, and rage-click detection (e.g. for Sentry).
 
 ---
 
@@ -28,6 +28,7 @@ A lightweight, extendable collection of React-like hooks for Preact, including u
 - **`usePreferredTheme`** — Detects the user's preferred color scheme (light/dark) from system preferences.
 - **`useNetworkState`** — Tracks online/offline status and connection details (type, downlink, RTT, save-data).
 - **`useClipboard`** — Copy and paste text with the Clipboard API, with copied/error state.
+- **`useRageClick`** — Detects rage clicks (repeated rapid clicks in the same spot). Use with Sentry or similar to detect and fix rage-click issues and lower rage-click-related support.
 - Fully TypeScript compatible
 - Bundled with Microbundle
 - Zero dependencies (except `preact`)
@@ -236,6 +237,36 @@ function PasteInput() {
       <button onClick={handlePaste}>Paste</button>
     </div>
   )
+}
+```
+
+---
+
+### `useRageClick`
+
+Detects rage clicks (multiple rapid clicks in the same area), e.g. when the UI is unresponsive. Report them to [Sentry](https://docs.sentry.io/product/issues/issue-details/replay-issues/rage-clicks/) or your error tracker to surface rage-click issues and lower rage-click-related support.
+
+```tsx
+import { useRef } from 'preact/hooks'
+import { useRageClick } from 'preact-missing-hooks'
+
+function SubmitButton() {
+  const ref = useRef<HTMLButtonElement>(null)
+
+  useRageClick(ref, {
+    onRageClick: ({ count, event }) => {
+      // Report to Sentry (or your error tracker) to create rage-click issues
+      Sentry.captureMessage('Rage click detected', {
+        level: 'warning',
+        extra: { count, target: event.target, tag: 'rage_click' },
+      })
+    },
+    threshold: 5, // min clicks (default 5, Sentry-style)
+    timeWindow: 1000, // ms (default 1000)
+    distanceThreshold: 30, // px (default 30)
+  })
+
+  return <button ref={ref}>Submit</button>
 }
 ```
 
