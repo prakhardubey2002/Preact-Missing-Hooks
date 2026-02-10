@@ -13,6 +13,8 @@
   </a>
 </p>
 
+If this package helps you, please consider dropping a star on the [GitHub repo](https://github.com/prakhardubey2002/Preact-Missing-Hooks).
+
 A lightweight, extendable collection of React-like hooks for Preact, including utilities for transitions, DOM mutation observation, global event buses, theme detection, network status, and clipboard access.
 
 ---
