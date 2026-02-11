@@ -63,6 +63,11 @@
       "types": "./dist/useIndexedDB.d.ts",
       "import": "./dist/useIndexedDB.module.js",
       "require": "./dist/useIndexedDB.js"
+    },
+    "./useWebRTCIP": {
+      "types": "./dist/useWebRTCIP.d.ts",
+      "import": "./dist/useWebRTCIP.module.js",
+      "require": "./dist/useWebRTCIP.js"
     }
   },
   "scripts": {

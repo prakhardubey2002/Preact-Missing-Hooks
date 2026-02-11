@@ -15,7 +15,7 @@
 
 If this package helps you, please consider dropping a star on the [GitHub repo](https://github.com/prakhardubey2002/Preact-Missing-Hooks).
 
-A lightweight, extendable collection of React-like hooks for Preact, including utilities for transitions, DOM mutation observation, global event buses, theme detection, network status, clipboard access, rage-click detection (e.g. for Sentry), a priority task queue (sequential or parallel), and a production-ready **IndexedDB** hook with tables, transactions, and a full CRUD API.
+A lightweight, extendable collection of React-like hooks for Preact, including utilities for transitions, DOM mutation observation, global event buses, theme detection, network status, clipboard access, rage-click detection (e.g. for Sentry), a priority task queue (sequential or parallel), a production-ready **IndexedDB** hook with tables, transactions, and a full CRUD API, and **WebRTC-based IP detection** (`useWebRTCIP`) for frontend-only IP hints.
 
 ---
 
@@ -31,6 +31,7 @@ A lightweight, extendable collection of React-like hooks for Preact, including u
 - **`useRageClick`** — Detects rage clicks (repeated rapid clicks in the same spot). Use with Sentry or similar to detect and fix rage-click issues and lower rage-click-related support.
 - **`useThreadedWorker`** — Run async work in a queue with **sequential** (single worker, priority-ordered) or **parallel** (worker pool) mode. Optional priority (1 = highest); FIFO within same priority.
 - **`useIndexedDB`** — IndexedDB abstraction with database/table init, insert, update, delete, exists, query (cursor + filter), upsert, bulk insert, clear, count, and full transaction support. Singleton connection, Promise-based API, optional `onSuccess`/`onError` callbacks.
+- **`useWebRTCIP`** — Detects client IP addresses using WebRTC ICE candidates and a STUN server (frontend-only). **Not highly reliable**; use as a first-priority hint and fall back to a public IP API (e.g. [ipapi.co](https://ipapi.co), [ipify](https://www.ipify.org), [ip-api.com](https://ip-api.com)) when it fails or returns empty.
 - Fully TypeScript compatible
 - Bundled with Microbundle
 - Zero dependencies (except `preact`)
@@ -55,8 +56,9 @@ npm install preact-missing-hooks
   ```ts
   import { useThreadedWorker } from 'preact-missing-hooks/useThreadedWorker'
   import { useClipboard } from 'preact-missing-hooks/useClipboard'
+  import { useWebRTCIP } from 'preact-missing-hooks/useWebRTCIP'
   ```
-  All hooks are available: `useTransition`, `useMutationObserver`, `useEventBus`, `useWrappedChildren`, `usePreferredTheme`, `useNetworkState`, `useClipboard`, `useRageClick`, `useThreadedWorker`, `useIndexedDB`.
+  All hooks are available: `useTransition`, `useMutationObserver`, `useEventBus`, `useWrappedChildren`, `usePreferredTheme`, `useNetworkState`, `useClipboard`, `useRageClick`, `useThreadedWorker`, `useIndexedDB`, `useWebRTCIP`.
 
 ---
 
@@ -368,6 +370,46 @@ function App() {
   })
 
   return <div>DB ready. Tables: {db.hasTable('users') ? 'users' : ''}</div>
+}
+```
+
+---
+
+### `useWebRTCIP`
+
+Detects client IP addresses using WebRTC ICE candidates and a STUN server (**frontend-only**, no backend). **Not highly reliable** — use as a **first-priority** hint; if it fails or returns empty, fall back to a public IP API (e.g. [ipapi.co](https://ipapi.co), [ipify](https://www.ipify.org), [ip-api.com](https://ip-api.com)).
+
+Returns `{ ips: string[], loading: boolean, error: string | null }`. Options: `stunServers`, `timeout` (ms), `onDetect(ip)`.
+
+```tsx
+import { useWebRTCIP } from 'preact-missing-hooks'
+import { useState, useEffect } from 'preact/hooks'
+
+function ClientIP() {
+  const { ips, loading, error } = useWebRTCIP({
+    timeout: 4000,
+    onDetect: (ip) => {
+      /* optional: e.g. analytics */
+    },
+  })
+  const [fallbackIP, setFallbackIP] = useState<string | null>(null)
+
+  // Fallback to public IP API when WebRTC fails or returns empty
+  useEffect(() => {
+    if (loading || ips.length > 0) return
+    if (error) {
+      fetch('https://api.ipify.org?format=json')
+        .then((r) => r.json())
+        .then((d) => setFallbackIP(d.ip))
+        .catch(() => {})
+    }
+  }, [loading, ips.length, error])
+
+  if (loading) return <p>Detecting IP…</p>
+  if (ips.length > 0) return <p>IPs (WebRTC): {ips.join(', ')}</p>
+  if (fallbackIP) return <p>IP (fallback API): {fallbackIP}</p>
+  if (error) return <p>WebRTC failed. Try fallback API.</p>
+  return null
 }
 ```
 
