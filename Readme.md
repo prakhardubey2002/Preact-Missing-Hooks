@@ -15,7 +15,7 @@
 
 If this package helps you, please consider dropping a star on the [GitHub repo](https://github.com/prakhardubey2002/Preact-Missing-Hooks).
 
-A lightweight, extendable collection of React-like hooks for Preact, including utilities for transitions, DOM mutation observation, global event buses, theme detection, network status, clipboard access, rage-click detection (e.g. for Sentry), and a priority task queue (sequential or parallel).
+A lightweight, extendable collection of React-like hooks for Preact, including utilities for transitions, DOM mutation observation, global event buses, theme detection, network status, clipboard access, rage-click detection (e.g. for Sentry), a priority task queue (sequential or parallel), and a production-ready **IndexedDB** hook with tables, transactions, and a full CRUD API.
 
 ---
 
@@ -30,6 +30,7 @@ A lightweight, extendable collection of React-like hooks for Preact, including u
 - **`useClipboard`** — Copy and paste text with the Clipboard API, with copied/error state.
 - **`useRageClick`** — Detects rage clicks (repeated rapid clicks in the same spot). Use with Sentry or similar to detect and fix rage-click issues and lower rage-click-related support.
 - **`useThreadedWorker`** — Run async work in a queue with **sequential** (single worker, priority-ordered) or **parallel** (worker pool) mode. Optional priority (1 = highest); FIFO within same priority.
+- **`useIndexedDB`** — IndexedDB abstraction with database/table init, insert, update, delete, exists, query (cursor + filter), upsert, bulk insert, clear, count, and full transaction support. Singleton connection, Promise-based API, optional `onSuccess`/`onError` callbacks.
 - Fully TypeScript compatible
 - Bundled with Microbundle
 - Zero dependencies (except `preact`)
@@ -55,7 +56,7 @@ npm install preact-missing-hooks
   import { useThreadedWorker } from 'preact-missing-hooks/useThreadedWorker'
   import { useClipboard } from 'preact-missing-hooks/useClipboard'
   ```
-  All hooks are available: `useTransition`, `useMutationObserver`, `useEventBus`, `useWrappedChildren`, `usePreferredTheme`, `useNetworkState`, `useClipboard`, `useRageClick`, `useThreadedWorker`.
+  All hooks are available: `useTransition`, `useMutationObserver`, `useEventBus`, `useWrappedChildren`, `usePreferredTheme`, `useNetworkState`, `useClipboard`, `useRageClick`, `useThreadedWorker`, `useIndexedDB`.
 
 ---
 
@@ -299,22 +300,75 @@ import { useThreadedWorker } from 'preact-missing-hooks'
 const sequential = useThreadedWorker(fetchUser, { mode: 'sequential' })
 
 // Parallel: up to N tasks at once
-const parallel = useThreadedWorker(processItem, { mode: 'parallel', concurrency: 4 })
+const parallel = useThreadedWorker(processItem, {
+  mode: 'parallel',
+  concurrency: 4,
+})
 
 // API (same for both modes)
 const {
-  run,        // (data, { priority?: number }) => Promise<TResult>
-  loading,    // true while any task is queued or running
-  result,     // last successful result
-  error,      // last error
-  queueSize,  // tasks queued + running
+  run, // (data, { priority?: number }) => Promise<TResult>
+  loading, // true while any task is queued or running
+  result, // last successful result
+  error, // last error
+  queueSize, // tasks queued + running
   clearQueue, // clear pending tasks (running continue)
-  terminate,  // clear queue and reject new run()
+  terminate, // clear queue and reject new run()
 } = sequential
 
 // Run with priority (1 = highest)
 await run({ userId: 1 }, { priority: 1 })
 await run({ userId: 2 }, { priority: 3 })
+```
+
+---
+
+### `useIndexedDB`
+
+Production-ready IndexedDB hook: database initialization, table creation (with keyPath, autoIncrement, indexes), singleton connection, and a full table API. All operations are Promise-based and support optional `onSuccess`/`onError` callbacks.
+
+**Config:** `name`, `version`, and `tables` (each table: `keyPath`, `autoIncrement?`, `indexes?`).
+
+**Table API:** `insert`, `update`, `delete`, `exists`, `query(filterFn)`, `upsert`, `bulkInsert`, `clear`, `count`.
+
+**Database API:** `db.table(name)`, `db.hasTable(name)`, `db.transaction(storeNames, mode, callback, options?)`.
+
+```tsx
+import { useIndexedDB } from 'preact-missing-hooks'
+
+function App() {
+  const { db, isReady, error } = useIndexedDB({
+    name: 'my-app-db',
+    version: 1,
+    tables: {
+      users: { keyPath: 'id', autoIncrement: true, indexes: ['email'] },
+      settings: { keyPath: 'key' },
+    },
+  })
+
+  if (error) return <div>Failed to open database</div>
+  if (!isReady || !db) return <div>Loading...</div>
+
+  const users = db.table('users')
+
+  // All operations return Promises and accept optional { onSuccess, onError }
+  await users.insert({ email: 'a@b.com', name: 'Alice' })
+  await users.update(1, { name: 'Alice Smith' })
+  const found = await users.query((u) => u.email.startsWith('a@'))
+  const n = await users.count()
+  await users.delete(1)
+  await users.upsert({ id: 2, email: 'b@b.com' })
+  await users.bulkInsert([{ email: 'c@b.com' }, { email: 'd@b.com' }])
+  await users.clear()
+
+  // Full transaction support
+  await db.transaction(['users', 'settings'], 'readwrite', async (tx) => {
+    await tx.table('users').insert({ email: 'e@b.com' })
+    await tx.table('settings').upsert({ key: 'theme', value: 'dark' })
+  })
+
+  return <div>DB ready. Tables: {db.hasTable('users') ? 'users' : ''}</div>
+}
 ```
 
 ---

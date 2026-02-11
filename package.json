@@ -10,54 +10,59 @@
   "source": "src/index.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.module.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     },
     "./useTransition": {
+      "types": "./dist/useTransition.d.ts",
       "import": "./dist/useTransition.module.js",
-      "require": "./dist/useTransition.js",
-      "types": "./dist/useTransition.d.ts"
+      "require": "./dist/useTransition.js"
     },
     "./useMutationObserver": {
+      "types": "./dist/useMutationObserver.d.ts",
       "import": "./dist/useMutationObserver.module.js",
-      "require": "./dist/useMutationObserver.js",
-      "types": "./dist/useMutationObserver.d.ts"
+      "require": "./dist/useMutationObserver.js"
     },
     "./useEventBus": {
+      "types": "./dist/useEventBus.d.ts",
       "import": "./dist/useEventBus.module.js",
-      "require": "./dist/useEventBus.js",
-      "types": "./dist/useEventBus.d.ts"
+      "require": "./dist/useEventBus.js"
     },
     "./useWrappedChildren": {
+      "types": "./dist/useWrappedChildren.d.ts",
       "import": "./dist/useWrappedChildren.module.js",
-      "require": "./dist/useWrappedChildren.js",
-      "types": "./dist/useWrappedChildren.d.ts"
+      "require": "./dist/useWrappedChildren.js"
     },
     "./usePreferredTheme": {
+      "types": "./dist/usePreferredTheme.d.ts",
       "import": "./dist/usePreferredTheme.module.js",
-      "require": "./dist/usePreferredTheme.js",
-      "types": "./dist/usePreferredTheme.d.ts"
+      "require": "./dist/usePreferredTheme.js"
     },
     "./useNetworkState": {
+      "types": "./dist/useNetworkState.d.ts",
       "import": "./dist/useNetworkState.module.js",
-      "require": "./dist/useNetworkState.js",
-      "types": "./dist/useNetworkState.d.ts"
+      "require": "./dist/useNetworkState.js"
     },
     "./useClipboard": {
+      "types": "./dist/useClipboard.d.ts",
       "import": "./dist/useClipboard.module.js",
-      "require": "./dist/useClipboard.js",
-      "types": "./dist/useClipboard.d.ts"
+      "require": "./dist/useClipboard.js"
     },
     "./useRageClick": {
+      "types": "./dist/useRageClick.d.ts",
       "import": "./dist/useRageClick.module.js",
-      "require": "./dist/useRageClick.js",
-      "types": "./dist/useRageClick.d.ts"
+      "require": "./dist/useRageClick.js"
     },
     "./useThreadedWorker": {
+      "types": "./dist/useThreadedWorker.d.ts",
       "import": "./dist/useThreadedWorker.module.js",
-      "require": "./dist/useThreadedWorker.js",
-      "types": "./dist/useThreadedWorker.d.ts"
+      "require": "./dist/useThreadedWorker.js"
+    },
+    "./useIndexedDB": {
+      "types": "./dist/useIndexedDB.d.ts",
+      "import": "./dist/useIndexedDB.module.js",
+      "require": "./dist/useIndexedDB.js"
     }
   },
   "scripts": {
@@ -96,6 +101,7 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/preact": "^3.2.4",
     "@types/jest": "^29.5.14",
+    "fake-indexeddb": "^6.0.2",
     "jsdom": "^26.1.0",
     "microbundle": "^0.15.1",
     "typescript": "^5.8.3",
