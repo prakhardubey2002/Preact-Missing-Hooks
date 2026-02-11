@@ -15,7 +15,7 @@
 
 If this package helps you, please consider dropping a star on the [GitHub repo](https://github.com/prakhardubey2002/Preact-Missing-Hooks).
 
-A lightweight, extendable collection of React-like hooks for Preact, including utilities for transitions, DOM mutation observation, global event buses, theme detection, network status, clipboard access, and rage-click detection (e.g. for Sentry).
+A lightweight, extendable collection of React-like hooks for Preact, including utilities for transitions, DOM mutation observation, global event buses, theme detection, network status, clipboard access, rage-click detection (e.g. for Sentry), and a priority task queue (sequential or parallel).
 
 ---
 
@@ -29,6 +29,7 @@ A lightweight, extendable collection of React-like hooks for Preact, including u
 - **`useNetworkState`** — Tracks online/offline status and connection details (type, downlink, RTT, save-data).
 - **`useClipboard`** — Copy and paste text with the Clipboard API, with copied/error state.
 - **`useRageClick`** — Detects rage clicks (repeated rapid clicks in the same spot). Use with Sentry or similar to detect and fix rage-click issues and lower rage-click-related support.
+- **`useThreadedWorker`** — Run async work in a queue with **sequential** (single worker, priority-ordered) or **parallel** (worker pool) mode. Optional priority (1 = highest); FIFO within same priority.
 - Fully TypeScript compatible
 - Bundled with Microbundle
 - Zero dependencies (except `preact`)
@@ -40,6 +41,21 @@ A lightweight, extendable collection of React-like hooks for Preact, including u
 ```bash
 npm install preact-missing-hooks
 ```
+
+---
+
+## Import options
+
+- **Main package** — Import from the package root:
+  ```ts
+  import { useThreadedWorker, useClipboard } from 'preact-missing-hooks'
+  ```
+- **Subpath exports (tree-shakeable)** — Import a single hook:
+  ```ts
+  import { useThreadedWorker } from 'preact-missing-hooks/useThreadedWorker'
+  import { useClipboard } from 'preact-missing-hooks/useClipboard'
+  ```
+  All hooks are available: `useTransition`, `useMutationObserver`, `useEventBus`, `useWrappedChildren`, `usePreferredTheme`, `useNetworkState`, `useClipboard`, `useRageClick`, `useThreadedWorker`.
 
 ---
 
@@ -268,6 +284,37 @@ function SubmitButton() {
 
   return <button ref={ref}>Submit</button>
 }
+```
+
+---
+
+### `useThreadedWorker`
+
+Runs async work in a queue with **sequential** (one task at a time, by priority) or **parallel** (worker pool) execution. Lower priority number = higher priority; same priority is FIFO.
+
+```tsx
+import { useThreadedWorker } from 'preact-missing-hooks'
+
+// Sequential: one task at a time, sorted by priority
+const sequential = useThreadedWorker(fetchUser, { mode: 'sequential' })
+
+// Parallel: up to N tasks at once
+const parallel = useThreadedWorker(processItem, { mode: 'parallel', concurrency: 4 })
+
+// API (same for both modes)
+const {
+  run,        // (data, { priority?: number }) => Promise<TResult>
+  loading,    // true while any task is queued or running
+  result,     // last successful result
+  error,      // last error
+  queueSize,  // tasks queued + running
+  clearQueue, // clear pending tasks (running continue)
+  terminate,  // clear queue and reject new run()
+} = sequential
+
+// Run with priority (1 = highest)
+await run({ userId: 1 }, { priority: 1 })
+await run({ userId: 2 }, { priority: 3 })
 ```
 
 ---

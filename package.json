@@ -18,6 +18,46 @@
       "import": "./dist/useTransition.module.js",
       "require": "./dist/useTransition.js",
       "types": "./dist/useTransition.d.ts"
+    },
+    "./useMutationObserver": {
+      "import": "./dist/useMutationObserver.module.js",
+      "require": "./dist/useMutationObserver.js",
+      "types": "./dist/useMutationObserver.d.ts"
+    },
+    "./useEventBus": {
+      "import": "./dist/useEventBus.module.js",
+      "require": "./dist/useEventBus.js",
+      "types": "./dist/useEventBus.d.ts"
+    },
+    "./useWrappedChildren": {
+      "import": "./dist/useWrappedChildren.module.js",
+      "require": "./dist/useWrappedChildren.js",
+      "types": "./dist/useWrappedChildren.d.ts"
+    },
+    "./usePreferredTheme": {
+      "import": "./dist/usePreferredTheme.module.js",
+      "require": "./dist/usePreferredTheme.js",
+      "types": "./dist/usePreferredTheme.d.ts"
+    },
+    "./useNetworkState": {
+      "import": "./dist/useNetworkState.module.js",
+      "require": "./dist/useNetworkState.js",
+      "types": "./dist/useNetworkState.d.ts"
+    },
+    "./useClipboard": {
+      "import": "./dist/useClipboard.module.js",
+      "require": "./dist/useClipboard.js",
+      "types": "./dist/useClipboard.d.ts"
+    },
+    "./useRageClick": {
+      "import": "./dist/useRageClick.module.js",
+      "require": "./dist/useRageClick.js",
+      "types": "./dist/useRageClick.d.ts"
+    },
+    "./useThreadedWorker": {
+      "import": "./dist/useThreadedWorker.module.js",
+      "require": "./dist/useThreadedWorker.js",
+      "types": "./dist/useThreadedWorker.d.ts"
     }
   },
   "scripts": {
