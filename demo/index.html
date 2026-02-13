@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Preact Missing Hooks — Demo</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "preact": "https://esm.sh/preact@10",
+          "preact/hooks": "https://esm.sh/preact@10/hooks"
+        }
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0f0f12;
+        --surface: #18181c;
+        --surface2: #222228;
+        --border: #2e2e36;
+        --text: #e4e4e7;
+        --textMuted: #a1a1aa;
+        --accent: #7c3aed;
+        --accentDim: rgba(124, 58, 237, 0.15);
+        --green: #22c55e;
+        --greenDim: rgba(34, 197, 94, 0.12);
+        --amber: #f59e0b;
+        --red: #ef4444;
+        --radius: 10px;
+        --radiusSm: 6px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: 'DM Sans', system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.5;
+        min-height: 100vh;
+      }
+      .page-header {
+        padding: 2rem 1.5rem;
+        text-align: center;
+        border-bottom: 1px solid var(--border);
+      }
+      .page-header h1 {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .page-header p {
+        margin: 0.5rem 0 0;
+        color: var(--textMuted);
+        font-size: 0.95rem;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1.5rem;
+      }
+      .hook-section {
+        margin-bottom: 3rem;
+      }
+      .hook-section h2 {
+        margin: 0 0 0.5rem;
+        font-size: 1.35rem;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .flow {
+        display: inline-block;
+        margin-bottom: 0.5rem;
+        padding: 0.25rem 0.6rem;
+        font-size: 0.75rem;
+        font-family: 'JetBrains Mono', monospace;
+        color: var(--accent);
+        background: var(--accentDim);
+        border-radius: var(--radiusSm);
+      }
+      .summary {
+        margin: 0 0 1rem;
+        font-size: 0.9rem;
+        color: var(--textMuted);
+        max-width: 60ch;
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+      @media (max-width: 800px) {
+        .cards {
+          grid-template-columns: 1fr;
+        }
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      .card-title {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--textMuted);
+        border-bottom: 1px solid var(--border);
+      }
+      .card-code {
+        padding: 0.75rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        line-height: 1.45;
+        color: var(--textMuted);
+        background: #0d0d0f;
+        overflow-x: auto;
+        white-space: pre;
+      }
+      .card-live {
+        padding: 1rem;
+        min-height: 80px;
+      }
+      .card-live .status {
+        font-size: 0.85rem;
+      }
+      .card-live button {
+        padding: 0.4rem 0.75rem;
+        margin: 0.2rem 0.2rem 0 0;
+        font-family: inherit;
+        font-size: 0.85rem;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: var(--radiusSm);
+        color: var(--text);
+        cursor: pointer;
+      }
+      .card-live button:hover {
+        background: var(--border);
+      }
+      .card-live button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .badge {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+      }
+      .badge.green {
+        background: var(--greenDim);
+        color: var(--green);
+      }
+      .badge.amber {
+        color: var(--amber);
+      }
+      /* IndexedDB demo: reactive table + action buttons */
+      .idb-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-bottom: 0.75rem;
+      }
+      .idb-table-viz {
+        background: var(--surface2);
+        border-radius: var(--radiusSm);
+        padding: 0.5rem;
+        font-size: 0.8rem;
+        max-height: 180px;
+        overflow-y: auto;
+      }
+      .idb-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.35rem 0.5rem;
+        border-radius: 4px;
+        margin-bottom: 2px;
+      }
+      .idb-row:nth-child(odd) {
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .idb-row-actions {
+        display: flex;
+        gap: 0.25rem;
+      }
+      .idb-count {
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--textMuted);
+      }
+      /* useWasmCompute flow diagram */
+      .wasm-flow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        padding: 0.75rem;
+        margin-bottom: 0.75rem;
+        background: var(--surface2);
+        border-radius: var(--radiusSm);
+      }
+      .wasm-flow-node {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.7rem;
+        font-family: 'JetBrains Mono', monospace;
+        border-radius: 4px;
+        border: 1px solid var(--border);
+        color: var(--textMuted);
+        transition: background 0.2s, border-color 0.2s;
+      }
+      .wasm-flow-node.active {
+        border-color: var(--accent);
+        background: var(--accentDim);
+        color: var(--accent);
+      }
+      .wasm-flow-arrow {
+        color: var(--textMuted);
+        font-size: 0.75rem;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="page-header">
+      <h1>Preact Missing Hooks</h1>
+    </header>
+    <main class="container" id="root"></main>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
