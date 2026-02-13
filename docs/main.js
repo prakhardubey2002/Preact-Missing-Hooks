@@ -1,6 +1,10 @@
 import { h, render } from 'https://esm.sh/preact@10';
 import { useState, useEffect, useRef } from 'https://esm.sh/preact@10/hooks';
-import {
+
+const isLocal =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+const {
   useTransition,
   useMutationObserver,
   useEventBus,
@@ -13,7 +17,10 @@ import {
   useIndexedDB,
   useWebRTCIP,
   useWasmCompute,
-} from 'https://unpkg.com/preact-missing-hooks/dist/index.module.js';
+  useWorkerNotifications,
+} = await import(
+  isLocal ? '../dist/index.module.js' : 'https://unpkg.com/preact-missing-hooks/dist/index.module.js'
+);
 
 // ——— Hook demo components ———
 
@@ -198,6 +205,117 @@ function DemoWasmCompute() {
   );
 }
 
+const DEMO_WORKER_SCRIPT = `
+self.onmessage = (e) => {
+  const d = e.data;
+  if (d.cmd === 'run' && d.taskId) {
+    self.postMessage({ type: 'task_start', taskId: d.taskId });
+    const start = Date.now();
+    setTimeout(() => {
+      self.postMessage({ type: 'task_end', taskId: d.taskId, duration: Date.now() - start });
+    }, 100);
+  } else if (d.cmd === 'fail' && d.taskId) {
+    self.postMessage({ type: 'task_start', taskId: d.taskId });
+    self.postMessage({ type: 'task_fail', taskId: d.taskId, error: 'Demo fail' });
+  } else if (d.cmd === 'queue' && typeof d.size === 'number') {
+    self.postMessage({ type: 'queue_size', size: d.size });
+  }
+};
+`;
+
+function DemoWorkerNotifications() {
+  const [worker, setWorker] = useState(null);
+  const [toasts, setToasts] = useState([]);
+  const taskIdRef = useRef(0);
+  const toastIdRef = useRef(0);
+  const eventHistoryLenRef = useRef(0);
+
+  useEffect(() => {
+    const blob = new Blob([DEMO_WORKER_SCRIPT], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    const w = new Worker(url);
+    setWorker(w);
+    return () => { URL.revokeObjectURL(url); w.terminate(); };
+  }, []);
+
+  const stats = useWorkerNotifications(worker, { maxHistory: 20 });
+  const { progress, eventHistory } = stats;
+
+  useEffect(() => {
+    const history = eventHistory;
+    const prevLen = eventHistoryLenRef.current;
+    if (history.length <= prevLen) return;
+    const newEvents = history.slice(prevLen);
+    eventHistoryLenRef.current = history.length;
+
+    const TOAST_TTL = 3000;
+    newEvents.forEach((ev) => {
+      const id = ++toastIdRef.current;
+      let type = 'queue-update';
+      let message = '';
+      if (ev.type === 'task_start') {
+        type = 'running';
+        message = 'Running ' + (ev.taskId || 'task');
+      } else if (ev.type === 'task_end') {
+        type = 'completed';
+        message = 'Completed ' + (ev.taskId || 'task') + (ev.duration != null ? ' (' + ev.duration + 'ms)' : '');
+      } else if (ev.type === 'task_fail') {
+        type = 'failed';
+        message = 'Failed ' + (ev.taskId || 'task') + (ev.error ? ': ' + ev.error : '');
+      } else if (ev.type === 'queue_size' && ev.size != null) {
+        type = 'queued';
+        message = 'Queue size: ' + ev.size;
+      }
+      if (!message) return;
+      setToasts((t) => [...t, { id, type, message }]);
+      setTimeout(() => {
+        setToasts((t) => t.filter((x) => x.id !== id));
+      }, TOAST_TTL);
+    });
+  }, [eventHistory]);
+
+  const runTask = () => {
+    if (!worker) return;
+    const id = 't' + ++taskIdRef.current;
+    worker.postMessage({ cmd: 'run', taskId: id });
+  };
+  const failTask = () => {
+    if (!worker) return;
+    worker.postMessage({ cmd: 'fail', taskId: 'fail-' + ++taskIdRef.current });
+  };
+  const setQueue = (n) => worker && worker.postMessage({ cmd: 'queue', size: n });
+
+  if (!worker) return h('div', { class: 'status' }, 'Starting worker…');
+
+  return h('div', {},
+    h('div', { style: { marginBottom: '0.5rem', fontSize: '0.85rem' } }, [
+      h('button', { onClick: runTask }, 'Run task'),
+      ' ',
+      h('button', { onClick: failTask }, 'Fail task'),
+      ' ',
+      h('button', { onClick: () => setQueue(3) }, 'Queue=3'),
+      ' ',
+      h('button', { onClick: () => setQueue(0) }, 'Queue=0'),
+    ]),
+    h('div', { class: 'status', style: { background: 'var(--surface2)', padding: '0.5rem', borderRadius: '6px' } }, [
+      h('strong', {}, 'Progress (default): '),
+      ' running: ' + progress.runningTasks.length,
+      ' | completed: ' + progress.completedCount,
+      ' | failed: ' + progress.failedCount,
+      ' | total: ' + progress.totalProcessed,
+      ' | avg ms: ' + progress.averageDurationMs.toFixed(0),
+      ' | throughput/s: ' + progress.throughputPerSecond.toFixed(2),
+      ' | queue: ' + progress.currentQueueSize,
+    ]),
+    h('div', { style: { marginTop: '0.35rem', fontSize: '0.8rem', color: 'var(--textMuted)' } },
+      'Events: ' + stats.eventHistory.length + ' | Running: [' + stats.runningTasks.join(', ') + ']'
+    ),
+    h('div', { class: 'worker-toast-container' },
+      toasts.map((t) => h('div', { key: t.id, class: 'worker-toast ' + t.type }, t.message))
+    )
+  );
+}
+
 // ——— Page data: heading, flow, summary, code, LiveComponent ———
 
 const HOOKS = [
@@ -284,6 +402,13 @@ const HOOKS = [
     summary: 'Runs WebAssembly in a worker; returns compute(input), result, loading, ready.',
     code: `const { compute, result, ready } = useWasmCompute({ wasmUrl: '/add.wasm' });\ncompute(41); // → 42`,
     Live: DemoWasmCompute,
+  },
+  {
+    name: 'useWorkerNotifications',
+    flow: 'Worker → useWorkerNotifications(worker) → message listener → runningTasks, completed/failed, history, throughput, progress',
+    summary: 'Listens to worker messages (task_start/task_end/task_fail/queue_size); tracks running tasks, counts, event history, avg duration, throughput/s, queue size; progress gives default view of all active worker data.',
+    code: `const stats = useWorkerNotifications(worker, { maxHistory: 100 });\n// stats.progress, stats.runningTasks, stats.throughputPerSecond, ...`,
+    Live: DemoWorkerNotifications,
   },
 ];
 

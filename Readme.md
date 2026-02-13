@@ -32,7 +32,8 @@ A lightweight, extendable collection of React-like hooks for Preact, including u
 - **`useThreadedWorker`** — Run async work in a queue with **sequential** (single worker, priority-ordered) or **parallel** (worker pool) mode. Optional priority (1 = highest); FIFO within same priority.
 - **`useIndexedDB`** — IndexedDB abstraction with database/table init, insert, update, delete, exists, query (cursor + filter), upsert, bulk insert, clear, count, and full transaction support. Singleton connection, Promise-based API, optional `onSuccess`/`onError` callbacks.
 - **`useWebRTCIP`** — Detects client IP addresses using WebRTC ICE candidates and a STUN server (frontend-only). **Not highly reliable**; use as a first-priority hint and fall back to a public IP API (e.g. [ipapi.co](https://ipapi.co), [ipify](https://www.ipify.org), [ip-api.com](https://ip-api.com)) when it fails or returns empty.
-- **`useWasmCompute`** — Runs WebAssembly computation off the main thread via a Web Worker. Flow: Preact Component → useWasmCompute() → Web Worker → WASM Module → return result. Validates environment (browser, Worker, WebAssembly) and returns `compute(input)`, `result`, `loading`, `error`, `ready`.
+- **`useWasmCompute`** — Runs WebAssembly computation off the main thread via a Web Worker. Validates environment (browser, Worker, WebAssembly) and returns `compute(input)`, `result`, `loading`, `error`, `ready`.
+- **`useWorkerNotifications`** — Listens to a Worker's messages and maintains state: running tasks, completed/failed counts, event history, average task duration, throughput per second, and queue size. Worker posts `task_start` / `task_end` / `task_fail` / `queue_size`; returns `progress` (default view of all active worker data) plus individual stats.
 - Fully TypeScript compatible
 - Bundled with Microbundle
 - Zero dependencies (except `preact`)
@@ -59,8 +60,9 @@ npm install preact-missing-hooks
   import { useClipboard } from 'preact-missing-hooks/useClipboard'
   import { useWebRTCIP } from 'preact-missing-hooks/useWebRTCIP'
   import { useWasmCompute } from 'preact-missing-hooks/useWasmCompute'
+  import { useWorkerNotifications } from 'preact-missing-hooks/useWorkerNotifications'
   ```
-  All hooks are available: `useTransition`, `useMutationObserver`, `useEventBus`, `useWrappedChildren`, `usePreferredTheme`, `useNetworkState`, `useClipboard`, `useRageClick`, `useThreadedWorker`, `useIndexedDB`, `useWebRTCIP`, `useWasmCompute`.
+  All hooks are available: `useTransition`, `useMutationObserver`, `useEventBus`, `useWrappedChildren`, `usePreferredTheme`, `useNetworkState`, `useClipboard`, `useRageClick`, `useThreadedWorker`, `useIndexedDB`, `useWebRTCIP`, `useWasmCompute`, `useWorkerNotifications`.
 
 ---
 
@@ -447,6 +449,39 @@ function AddWithWasm() {
         Add 2
       </button>
       {result != null && <p>Result: {result}</p>}
+    </div>
+  )
+}
+```
+
+---
+
+### `useWorkerNotifications`
+
+Listens to a Worker's `message` events and maintains state and derived stats. Your worker should `postMessage` with: `{ type: 'task_start', taskId? }`, `{ type: 'task_end', taskId?, duration? }`, `{ type: 'task_fail', taskId?, error? }`, and optionally `{ type: 'queue_size', size }`.
+
+Returns `runningTasks`, `completedCount`, `failedCount`, `eventHistory`, `averageDurationMs`, `throughputPerSecond`, `currentQueueSize`, and **`progress`** — a single object with all active worker data (running, completed, failed, totalProcessed, avg duration, throughput/s, queue). Options: `maxHistory` (default 100), `throughputWindowMs` (default 1000).
+
+```tsx
+import { useWorkerNotifications } from 'preact-missing-hooks'
+
+function WorkerDashboard({ worker }) {
+  const { progress, eventHistory } = useWorkerNotifications(worker, {
+    maxHistory: 50,
+  })
+
+  return (
+    <div>
+      <p>
+        Running: {progress.runningTasks.length} | Done:{' '}
+        {progress.completedCount} | Failed: {progress.failedCount}
+      </p>
+      <p>
+        Avg: {progress.averageDurationMs.toFixed(0)}ms | Throughput:{' '}
+        {progress.throughputPerSecond.toFixed(2)}/s | Queue:{' '}
+        {progress.currentQueueSize}
+      </p>
+      <small>Events: {eventHistory.length}</small>
     </div>
   )
 }

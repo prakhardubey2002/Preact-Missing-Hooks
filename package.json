@@ -73,6 +73,11 @@
       "types": "./dist/useWasmCompute.d.ts",
       "import": "./dist/useWasmCompute.module.js",
       "require": "./dist/useWasmCompute.js"
+    },
+    "./useWorkerNotifications": {
+      "types": "./dist/useWorkerNotifications.d.ts",
+      "import": "./dist/useWorkerNotifications.module.js",
+      "require": "./dist/useWorkerNotifications.js"
     }
   },
   "scripts": {
