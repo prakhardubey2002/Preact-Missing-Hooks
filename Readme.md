@@ -32,6 +32,7 @@ A lightweight, extendable collection of React-like hooks for Preact, including u
 - **`useThreadedWorker`** — Run async work in a queue with **sequential** (single worker, priority-ordered) or **parallel** (worker pool) mode. Optional priority (1 = highest); FIFO within same priority.
 - **`useIndexedDB`** — IndexedDB abstraction with database/table init, insert, update, delete, exists, query (cursor + filter), upsert, bulk insert, clear, count, and full transaction support. Singleton connection, Promise-based API, optional `onSuccess`/`onError` callbacks.
 - **`useWebRTCIP`** — Detects client IP addresses using WebRTC ICE candidates and a STUN server (frontend-only). **Not highly reliable**; use as a first-priority hint and fall back to a public IP API (e.g. [ipapi.co](https://ipapi.co), [ipify](https://www.ipify.org), [ip-api.com](https://ip-api.com)) when it fails or returns empty.
+- **`useWasmCompute`** — Runs WebAssembly computation off the main thread via a Web Worker. Flow: Preact Component → useWasmCompute() → Web Worker → WASM Module → return result. Validates environment (browser, Worker, WebAssembly) and returns `compute(input)`, `result`, `loading`, `error`, `ready`.
 - Fully TypeScript compatible
 - Bundled with Microbundle
 - Zero dependencies (except `preact`)
@@ -57,8 +58,9 @@ npm install preact-missing-hooks
   import { useThreadedWorker } from 'preact-missing-hooks/useThreadedWorker'
   import { useClipboard } from 'preact-missing-hooks/useClipboard'
   import { useWebRTCIP } from 'preact-missing-hooks/useWebRTCIP'
+  import { useWasmCompute } from 'preact-missing-hooks/useWasmCompute'
   ```
-  All hooks are available: `useTransition`, `useMutationObserver`, `useEventBus`, `useWrappedChildren`, `usePreferredTheme`, `useNetworkState`, `useClipboard`, `useRageClick`, `useThreadedWorker`, `useIndexedDB`, `useWebRTCIP`.
+  All hooks are available: `useTransition`, `useMutationObserver`, `useEventBus`, `useWrappedChildren`, `usePreferredTheme`, `useNetworkState`, `useClipboard`, `useRageClick`, `useThreadedWorker`, `useIndexedDB`, `useWebRTCIP`, `useWasmCompute`.
 
 ---
 
@@ -410,6 +412,43 @@ function ClientIP() {
   if (fallbackIP) return <p>IP (fallback API): {fallbackIP}</p>
   if (error) return <p>WebRTC failed. Try fallback API.</p>
   return null
+}
+```
+
+---
+
+### `useWasmCompute`
+
+Runs WebAssembly computation in a Web Worker so the main thread stays responsive. Flow: **Preact Component → useWasmCompute() → Web Worker → WASM Module → return result.** The hook checks that the environment supports `window`, `Worker`, and `WebAssembly`; in SSR or unsupported environments it sets `error` and leaves `ready` false.
+
+Returns `{ compute, result, loading, error, ready }`. Options: `wasmUrl` (required), `exportName` (default `'compute'`), optional `workerUrl` (custom worker script), optional `importObject` (must be serializable for the default worker).
+
+```tsx
+import { useWasmCompute } from 'preact-missing-hooks'
+
+function AddWithWasm() {
+  const { compute, result, loading, error, ready } = useWasmCompute<
+    number,
+    number
+  >({
+    wasmUrl: '/add.wasm',
+    exportName: 'add',
+  })
+
+  const handleClick = () => {
+    if (ready) compute(2).then(() => {})
+  }
+
+  if (error) return <p>WASM unavailable: {error}</p>
+  if (!ready) return <p>Loading WASM…</p>
+  return (
+    <div>
+      <button onClick={handleClick} disabled={loading}>
+        Add 2
+      </button>
+      {result != null && <p>Result: {result}</p>}
+    </div>
+  )
 }
 ```
 

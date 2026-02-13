@@ -68,6 +68,11 @@
       "types": "./dist/useWebRTCIP.d.ts",
       "import": "./dist/useWebRTCIP.module.js",
       "require": "./dist/useWebRTCIP.js"
+    },
+    "./useWasmCompute": {
+      "types": "./dist/useWasmCompute.d.ts",
+      "import": "./dist/useWasmCompute.module.js",
+      "require": "./dist/useWasmCompute.js"
     }
   },
   "scripts": {
@@ -75,7 +80,8 @@
     "dev": "microbundle watch",
     "prepublishOnly": "npm run build",
     "test": "vitest run",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "demo": "npx serve -l 5000"
   },
   "keywords": [
     "preact",
