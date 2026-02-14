@@ -117,7 +117,10 @@ function App() {
 }
 ```
 
-**Live demo:** Run the docs demo locally to try every hook with live examples:
+**Live demo:** Try every hook with live examples:
+
+- **Online:** [preact-missing-hooks.vercel.app](https://preact-missing-hooks.vercel.app/)
+- **Local:** Run the docs demo:
 
 ```bash
 npm run build && npx serve -l 5000
