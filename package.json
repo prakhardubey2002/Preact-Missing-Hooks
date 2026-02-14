@@ -103,7 +103,8 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,json,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,json,md}\"",
     "prepare": "husky",
-    "size": "npm run build && size-limit"
+    "clean:cache": "node -e \"try{require('fs').rmSync('node_modules/.cache',{recursive:true,force:true});console.log('Cache cleared');}catch(e){}\"",
+    "size": "npm run clean:cache && npm run build && size-limit"
   },
   "size-limit": [
     {
