@@ -18,6 +18,7 @@ const {
   useWebRTCIP,
   useWasmCompute,
   useWorkerNotifications,
+  useLLMMetadata,
 } = await import(
   isLocal ? '../dist/index.module.js' : 'https://unpkg.com/preact-missing-hooks/dist/index.module.js'
 );
@@ -316,6 +317,47 @@ function DemoWorkerNotifications() {
   );
 }
 
+function DemoLLMMetadata() {
+  const [route, setRoute] = useState('/');
+  useLLMMetadata({
+    route,
+    mode: 'manual',
+    title: 'Preact Missing Hooks — Demo',
+    description: 'Live demo of useLLMMetadata and other hooks.',
+    tags: ['preact', 'hooks', 'demo'],
+  });
+  const scriptEl = typeof document !== 'undefined' ? document.querySelector('script[data-llm="true"]') : null;
+  const rawText = scriptEl?.textContent ?? '';
+  const payload = rawText ? (() => { try { return JSON.parse(rawText); } catch (_) { return null; } })() : null;
+  const llmFormatted = payload ? JSON.stringify(payload, null, 2) : rawText || '(no script yet)';
+  return h('div', {},
+    h('div', { style: { marginBottom: '0.5rem' } }, [
+      h('button', { onClick: () => setRoute('/') }, 'Route: /'),
+      h('button', { onClick: () => setRoute('/blog') }, 'Route: /blog'),
+      h('button', { onClick: () => setRoute('/docs') }, 'Route: /docs'),
+    ]),
+    h('div', { class: 'status', style: { fontSize: '0.8rem', wordBreak: 'break-all', marginBottom: '0.5rem' } },
+      payload
+        ? 'Injected: ' + (payload.title || payload.route) + (payload.generatedAt ? ' @ ' + payload.generatedAt : '')
+        : 'Check <head> for <script type="application/llm+json" data-llm="true">'
+    ),
+    h('div', { style: { marginTop: '0.5rem' } }, [
+      h('div', { style: { fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.25rem', color: 'var(--text2)' } }, 'llm.txt (full payload below):'),
+      h('pre', {
+        class: 'card-code',
+        style: {
+          maxHeight: '12rem',
+          overflow: 'auto',
+          margin: 0,
+          fontSize: '0.7rem',
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-all',
+        },
+      }, llmFormatted),
+    ])
+  );
+}
+
 // ——— Page data: heading, flow, summary, code, LiveComponent ———
 
 const HOOKS = [
@@ -409,6 +451,13 @@ const HOOKS = [
     summary: 'Listens to worker messages (task_start/task_end/task_fail/queue_size); tracks running tasks, counts, event history, avg duration, throughput/s, queue size; progress gives default view of all active worker data.',
     code: `const stats = useWorkerNotifications(worker, { maxHistory: 100 });\n// stats.progress, stats.runningTasks, stats.throughputPerSecond, ...`,
     Live: DemoWorkerNotifications,
+  },
+  {
+    name: 'useLLMMetadata',
+    flow: 'Component → useLLMMetadata({ route, mode, title?, ... } | null) → <script type="application/llm+json" data-llm="true"> in <head>',
+    summary: 'Injects AI-readable metadata into the document head on route change. Manual mode uses config; auto-extract uses document.title, visible h1/h2, first 3 <p>. Accepts null/undefined (minimal payload with route "/"). SSR-safe, cacheable.',
+    code: `useLLMMetadata({ route: pathname, mode: 'manual', title: 'My Page', tags: ['app'] });\n// useLLMMetadata(null) is safe → minimal payload with route "/"`,
+    Live: DemoLLMMetadata,
   },
 ];
 

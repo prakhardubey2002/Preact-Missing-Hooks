@@ -89,7 +89,7 @@
     }
   },
   "scripts": {
-    "build": "microbundle && npm run build:react && node scripts/generate-entry.cjs",
+    "build": "microbundle --alias react=preact/compat && npm run build:react && node scripts/generate-entry.cjs",
     "build:react": "microbundle -i src/index.ts -o dist/react.js --alias preact=react,preact/hooks=react --no-sourcemap",
     "dev": "microbundle watch",
     "prepublishOnly": "npm run build",

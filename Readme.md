@@ -34,6 +34,7 @@ A lightweight, extendable collection of React-like hooks for Preact, including u
 - **`useWebRTCIP`** — Detects client IP addresses using WebRTC ICE candidates and a STUN server (frontend-only). **Not highly reliable**; use as a first-priority hint and fall back to a public IP API (e.g. [ipapi.co](https://ipapi.co), [ipify](https://www.ipify.org), [ip-api.com](https://ip-api.com)) when it fails or returns empty.
 - **`useWasmCompute`** — Runs WebAssembly computation off the main thread via a Web Worker. Validates environment (browser, Worker, WebAssembly) and returns `compute(input)`, `result`, `loading`, `error`, `ready`.
 - **`useWorkerNotifications`** — Listens to a Worker's messages and maintains state: running tasks, completed/failed counts, event history, average task duration, throughput per second, and queue size. Worker posts `task_start` / `task_end` / `task_fail` / `queue_size`; returns `progress` (default view of all active worker data) plus individual stats.
+- **`useLLMMetadata`** — Injects an AI-readable metadata block into the document head on route change. Works in React 18+ and Preact 10+. Supports **manual** (title, description, tags) and **auto-extract** (from `document.title`, visible `h1`/`h2`, first 3 `p`). Cacheable, SSR-safe, no router dependency.
 - Fully TypeScript compatible
 - Bundled with Microbundle
 - Zero dependencies (peer: `preact` or `react` — use `/react` for React)
@@ -75,7 +76,74 @@ import { useThreadedWorker, useClipboard } from "preact-missing-hooks";
   import { useWorkerNotifications } from "preact-missing-hooks/useWorkerNotifications";
   ```
 
-  All hooks are available: `useTransition`, `useMutationObserver`, `useEventBus`, `useWrappedChildren`, `usePreferredTheme`, `useNetworkState`, `useClipboard`, `useRageClick`, `useThreadedWorker`, `useIndexedDB`, `useWebRTCIP`, `useWasmCompute`, `useWorkerNotifications`.
+  All hooks are available: `useTransition`, `useMutationObserver`, `useEventBus`, `useWrappedChildren`, `usePreferredTheme`, `useNetworkState`, `useClipboard`, `useRageClick`, `useThreadedWorker`, `useIndexedDB`, `useWebRTCIP`, `useWasmCompute`, `useWorkerNotifications`, `useLLMMetadata`.
+
+---
+
+## Quick start
+
+Minimal example (Preact or React):
+
+```tsx
+import {
+  useTransition,
+  useClipboard,
+  usePreferredTheme,
+} from "preact-missing-hooks";
+
+function App() {
+  const [startTransition, isPending] = useTransition();
+  const { copy, copied } = useClipboard();
+  const theme = usePreferredTheme();
+
+  return (
+    <div>
+      <button
+        onClick={() =>
+          startTransition(() => {
+            /* heavy update */
+          })
+        }
+        disabled={isPending}
+      >
+        {isPending ? "Loading…" : "Update"}
+      </button>
+      <button onClick={() => copy("Hello!")}>
+        {copied ? "Copied!" : "Copy"}
+      </button>
+      <span>Theme: {theme}</span>
+    </div>
+  );
+}
+```
+
+**Live demo:** Run the docs demo locally to try every hook with live examples:
+
+```bash
+npm run build && npx serve -l 5000
+# Open http://localhost:5000/docs/
+```
+
+Or open `docs/index.html` after building (see [docs/README.md](docs/README.md) for details).
+
+**Usage at a glance:**
+
+| Hook                                              | One-liner                                                                         |
+| ------------------------------------------------- | --------------------------------------------------------------------------------- |
+| [useTransition](#usetransition)                   | `const [startTransition, isPending] = useTransition();`                           |
+| [useMutationObserver](#usemutationobserver)       | `useMutationObserver(ref, callback, { childList: true });`                        |
+| [useEventBus](#useeventbus)                       | `const { emit, on } = useEventBus();`                                             |
+| [useWrappedChildren](#usewrappedchildren)         | `const wrapped = useWrappedChildren(children, { className: 'x' });`               |
+| [usePreferredTheme](#usepreferredtheme)           | `const theme = usePreferredTheme(); // 'light' \| 'dark' \| 'no-preference'`      |
+| [useNetworkState](#usenetworkstate)               | `const { online, effectiveType } = useNetworkState();`                            |
+| [useClipboard](#useclipboard)                     | `const { copy, paste, copied } = useClipboard();`                                 |
+| [useRageClick](#userageclick)                     | `useRageClick(ref, { onRageClick, threshold: 5 });`                               |
+| [useThreadedWorker](#usethreadedworker)           | `const { run, loading, result } = useThreadedWorker(fn, { mode: 'sequential' });` |
+| [useIndexedDB](#useindexeddb)                     | `const { db, isReady } = useIndexedDB({ name, version, tables });`                |
+| [useWebRTCIP](#usewebrtcip)                       | `const { ips, loading, error } = useWebRTCIP({ timeout: 3000 });`                 |
+| [useWasmCompute](#usewasmcompute)                 | `const { compute, result, ready } = useWasmCompute({ wasmUrl });`                 |
+| [useWorkerNotifications](#useworkernotifications) | `const { progress, eventHistory } = useWorkerNotifications(worker);`              |
+| [useLLMMetadata](#usellmmetadata)                 | `useLLMMetadata({ route: pathname, mode: 'auto-extract' });`                      |
 
 ---
 
@@ -497,6 +565,121 @@ function WorkerDashboard({ worker }) {
       <small>Events: {eventHistory.length}</small>
     </div>
   );
+}
+```
+
+---
+
+### `useLLMMetadata`
+
+Injects an AI-readable metadata block into the document head when the route changes. Works in **React 18+** and **Preact 10+** (framework-agnostic). No router dependency — you pass the current `route` string and the hook updates the script when it changes.
+
+**Safe usage:** The hook **never throws**. It accepts `config` or `null`/`undefined`. When `config` is `null` or `undefined`, it injects a minimal payload with `route: "/"` and `generatedAt`. Invalid or missing values are normalized; all strings are length-limited and URLs validated; DOM access is wrapped in try/catch. Safe for SSR (no-op when `window` is undefined).
+
+**API:**
+
+```ts
+type OGType =
+  | "website"
+  | "article"
+  | "profile"
+  | "video.other"
+  | "product"
+  | "music.song"
+  | "book";
+
+interface LLMConfig {
+  route: string;
+  mode?: "manual" | "auto-extract";
+  title?: string;
+  description?: string;
+  tags?: string[];
+  canonicalUrl?: string; // absolute URL
+  language?: string; // e.g. "en", "en-US"
+  ogType?: OGType; // Open Graph type
+  ogImage?: string; // absolute image URL
+  ogImageAlt?: string;
+  siteName?: string;
+  author?: string;
+  publishedTime?: string; // ISO date
+  modifiedTime?: string; // ISO date
+  robots?: string; // e.g. "index, follow"
+  extra?: Record<string, string | number | boolean | string[]>;
+}
+
+function useLLMMetadata(config: LLMConfig | null | undefined): void;
+```
+
+**Behavior:**
+
+- When `config` is `null` or `undefined`: injects a minimal payload with `route: "/"` and `generatedAt` (no throw).
+- When `config.route` (or other deps) change: removes any existing `<script data-llm="true">`, then injects a new one.
+- Script tag: `<script type="application/llm+json" data-llm="true">` with JSON payload. Only defined, safe fields are included.
+- **Cacheable:** If the generated payload is unchanged, the script is not replaced.
+- **SSR-safe:** No-op when `typeof window === "undefined"`.
+- Cleans up on unmount (removes the script).
+
+**Modes:**
+
+- **`manual`** (default): Uses `title`, `description`, `tags`, and any other config fields you pass.
+- **`auto-extract`**: Fills `title`, `description`, and `outline` from the DOM (`document.title`, visible `<h1>`/`<h2>`, first 3 visible `<p>`). You can still override with config. Ignores content inside `nav`, `footer`, `script`, `style`.
+
+**Example payload (rich):**
+
+```json
+{
+  "route": "/blog/ai-hooks",
+  "title": "AI Hooks in Preact",
+  "description": "A short summary...",
+  "tags": ["preact", "react", "hooks"],
+  "outline": ["Intro", "Problem", "Solution"],
+  "canonicalUrl": "https://example.com/blog/ai-hooks",
+  "language": "en",
+  "ogType": "article",
+  "ogImage": "https://example.com/og.png",
+  "siteName": "My Blog",
+  "author": "Jane Doe",
+  "publishedTime": "2025-02-14T10:00:00.000Z",
+  "modifiedTime": "2025-02-14T12:00:00.000Z",
+  "robots": "index, follow",
+  "generatedAt": "2025-02-14T12:00:00.000Z"
+}
+```
+
+**Example: React Router**
+
+```tsx
+import { useLocation } from "react-router-dom";
+import { useLLMMetadata } from "preact-missing-hooks"; // or "preact-missing-hooks/react"
+
+function App() {
+  const { pathname } = useLocation();
+  useLLMMetadata({
+    route: pathname,
+    mode: "auto-extract",
+    title: document.title,
+    tags: ["my-app"],
+  });
+  return <Outlet />;
+}
+```
+
+**Example: Preact Router**
+
+```tsx
+import { useLocation } from "preact-router";
+import { useLLMMetadata } from "preact-missing-hooks";
+
+function App() {
+  const [pathname] = useLocation();
+  useLLMMetadata({
+    route: pathname ?? "/",
+    mode: "manual",
+    title: "My Page",
+    description: "Page description",
+    tags: ["preact", "hooks"],
+  });
+  return <div>{/* your routes / children */}</div>;
 }
 ```
 

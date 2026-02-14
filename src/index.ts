@@ -11,3 +11,4 @@ export * from "./useIndexedDB";
 export * from "./useWebRTCIP";
 export * from "./useWasmCompute";
 export * from "./useWorkerNotifications";
+export * from "./useLLMMetadata";

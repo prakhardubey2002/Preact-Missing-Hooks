@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -8,7 +8,8 @@
       {
         "imports": {
           "preact": "https://esm.sh/preact@10",
-          "preact/hooks": "https://esm.sh/preact@10/hooks"
+          "preact/hooks": "https://esm.sh/preact@10/hooks",
+          "preact/compat": "https://esm.sh/preact@10/compat"
         }
       }
     </script>
@@ -25,6 +26,7 @@
         --surface2: #222228;
         --border: #2e2e36;
         --text: #e4e4e7;
+        --text2: #d4d4d8;
         --textMuted: #a1a1aa;
         --accent: #7c3aed;
         --accentDim: rgba(124, 58, 237, 0.15);
@@ -38,24 +40,39 @@
       * {
         box-sizing: border-box;
       }
+      html {
+        overflow-x: hidden;
+      }
       body {
         margin: 0;
-        font-family: 'DM Sans', system-ui, sans-serif;
+        font-family: "DM Sans", system-ui, sans-serif;
         background: var(--bg);
         color: var(--text);
         line-height: 1.5;
         min-height: 100vh;
       }
       .page-header {
-        padding: 2rem 1.5rem;
+        padding: 2.5rem 1.5rem;
         text-align: center;
         border-bottom: 1px solid var(--border);
+        background: linear-gradient(
+          180deg,
+          rgba(124, 58, 237, 0.04) 0%,
+          transparent 100%
+        );
       }
       .page-header h1 {
         margin: 0;
-        font-size: 1.75rem;
+        font-size: 1.85rem;
         font-weight: 700;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.03em;
+        color: var(--text2);
+      }
+      .page-header .subtitle {
+        margin: 0.5rem 0 0;
+        color: var(--textMuted);
+        font-size: 0.95rem;
+        font-weight: 400;
       }
       .page-header p {
         margin: 0.5rem 0 0;
@@ -63,39 +80,50 @@
         font-size: 0.95rem;
       }
       .container {
-        max-width: 1200px;
+        max-width: min(1320px, 96vw);
         margin: 0 auto;
-        padding: 1.5rem;
+        padding: 1.75rem 1.5rem;
       }
       .hook-section {
-        margin-bottom: 3rem;
+        margin-bottom: 3.5rem;
+        padding-bottom: 2.5rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .hook-section:last-child {
+        border-bottom: none;
       }
       .hook-section h2 {
         margin: 0 0 0.5rem;
         font-size: 1.35rem;
         font-weight: 600;
         color: var(--text);
+        letter-spacing: -0.02em;
       }
       .flow {
         display: inline-block;
+        max-width: 100%;
         margin-bottom: 0.5rem;
-        padding: 0.25rem 0.6rem;
+        padding: 0.35rem 0.7rem;
         font-size: 0.75rem;
-        font-family: 'JetBrains Mono', monospace;
+        font-family: "JetBrains Mono", monospace;
         color: var(--accent);
         background: var(--accentDim);
         border-radius: var(--radiusSm);
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: break-word;
       }
       .summary {
         margin: 0 0 1rem;
         font-size: 0.9rem;
         color: var(--textMuted);
-        max-width: 60ch;
+        max-width: 72ch;
+        line-height: 1.55;
       }
       .cards {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 1rem;
+        gap: 1.25rem;
       }
       @media (max-width: 800px) {
         .cards {
@@ -107,6 +135,7 @@
         border: 1px solid var(--border);
         border-radius: var(--radius);
         overflow: hidden;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
       }
       .card-title {
         padding: 0.5rem 0.75rem;
@@ -118,18 +147,24 @@
         border-bottom: 1px solid var(--border);
       }
       .card-code {
-        padding: 0.75rem;
-        font-family: 'JetBrains Mono', monospace;
+        padding: 0.75rem 1rem;
+        font-family: "JetBrains Mono", monospace;
         font-size: 0.8rem;
-        line-height: 1.45;
+        line-height: 1.5;
         color: var(--textMuted);
         background: #0d0d0f;
-        overflow-x: auto;
-        white-space: pre;
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        overflow-x: hidden;
+        min-width: 0;
       }
       .card-live {
         padding: 1rem;
         min-height: 80px;
+        min-width: 0;
+        overflow-wrap: break-word;
+        word-break: break-word;
       }
       .card-live .status {
         font-size: 0.85rem;
@@ -215,11 +250,13 @@
       .wasm-flow-node {
         padding: 0.3rem 0.5rem;
         font-size: 0.7rem;
-        font-family: 'JetBrains Mono', monospace;
+        font-family: "JetBrains Mono", monospace;
         border-radius: 4px;
         border: 1px solid var(--border);
         color: var(--textMuted);
-        transition: background 0.2s, border-color 0.2s;
+        transition:
+          background 0.2s,
+          border-color 0.2s;
       }
       .wasm-flow-node.active {
         border-color: var(--accent);
@@ -291,6 +328,7 @@
   <body>
     <header class="page-header">
       <h1>Preact Missing Hooks</h1>
+      <p class="subtitle">React-like hooks for Preact — demo &amp; usage</p>
     </header>
     <main class="container" id="root"></main>
     <script type="module" src="./main.js"></script>
