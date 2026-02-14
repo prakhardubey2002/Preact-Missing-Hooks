@@ -16,7 +16,14 @@ const MAX_SITE_NAME = 100;
 const MAX_ROBOTS = 100;
 
 /** Open Graph / content type for og:type. */
-export type OGType = "website" | "article" | "profile" | "video.other" | "product" | "music.song" | "book";
+export type OGType =
+  | "website"
+  | "article"
+  | "profile"
+  | "video.other"
+  | "product"
+  | "music.song"
+  | "book";
 
 /** Config for the useLLMMetadata hook. All fields optional except route. */
 export interface LLMConfig {
@@ -177,7 +184,8 @@ function autoExtract(): {
           if (text) visibleParagraphs.push(text);
         }
       }
-      description = visibleParagraphs.join(" ").trim().slice(0, MAX_DESCRIPTION) || "";
+      description =
+        visibleParagraphs.join(" ").trim().slice(0, MAX_DESCRIPTION) || "";
     } catch {
       // keep title, empty outline/description
     }
@@ -198,27 +206,63 @@ function normalizeConfig(config: LLMConfig | null | undefined): LLMConfig {
   return {
     route: safeStr(config.route, 2048) || "/",
     mode: config.mode === "auto-extract" ? "auto-extract" : "manual",
-    title: config.title !== undefined ? safeStr(config.title, MAX_TITLE) : undefined,
-    description: config.description !== undefined ? safeStr(config.description, MAX_DESCRIPTION) : undefined,
+    title:
+      config.title !== undefined ? safeStr(config.title, MAX_TITLE) : undefined,
+    description:
+      config.description !== undefined
+        ? safeStr(config.description, MAX_DESCRIPTION)
+        : undefined,
     tags: config.tags !== undefined ? safeTagList(config.tags) : undefined,
-    canonicalUrl: config.canonicalUrl !== undefined ? safeUrl(config.canonicalUrl) : undefined,
-    language: config.language !== undefined ? safeStr(config.language, 20) : undefined,
-    ogType: config.ogType !== undefined ? safeStr(config.ogType, 50) as OGType : undefined,
+    canonicalUrl:
+      config.canonicalUrl !== undefined
+        ? safeUrl(config.canonicalUrl)
+        : undefined,
+    language:
+      config.language !== undefined ? safeStr(config.language, 20) : undefined,
+    ogType:
+      config.ogType !== undefined
+        ? (safeStr(config.ogType, 50) as OGType)
+        : undefined,
     ogImage: config.ogImage !== undefined ? safeUrl(config.ogImage) : undefined,
-    ogImageAlt: config.ogImageAlt !== undefined ? safeStr(config.ogImageAlt, 200) : undefined,
-    siteName: config.siteName !== undefined ? safeStr(config.siteName, MAX_SITE_NAME) : undefined,
-    author: config.author !== undefined ? safeStr(config.author, MAX_AUTHOR) : undefined,
-    publishedTime: config.publishedTime !== undefined ? safeStr(config.publishedTime, 50) : undefined,
-    modifiedTime: config.modifiedTime !== undefined ? safeStr(config.modifiedTime, 50) : undefined,
-    robots: config.robots !== undefined ? safeStr(config.robots, MAX_ROBOTS) : undefined,
-    extra: config.extra !== undefined && typeof config.extra === "object" && !Array.isArray(config.extra) ? sanitizeExtra(config.extra) : undefined,
+    ogImageAlt:
+      config.ogImageAlt !== undefined
+        ? safeStr(config.ogImageAlt, 200)
+        : undefined,
+    siteName:
+      config.siteName !== undefined
+        ? safeStr(config.siteName, MAX_SITE_NAME)
+        : undefined,
+    author:
+      config.author !== undefined
+        ? safeStr(config.author, MAX_AUTHOR)
+        : undefined,
+    publishedTime:
+      config.publishedTime !== undefined
+        ? safeStr(config.publishedTime, 50)
+        : undefined,
+    modifiedTime:
+      config.modifiedTime !== undefined
+        ? safeStr(config.modifiedTime, 50)
+        : undefined,
+    robots:
+      config.robots !== undefined
+        ? safeStr(config.robots, MAX_ROBOTS)
+        : undefined,
+    extra:
+      config.extra !== undefined &&
+      typeof config.extra === "object" &&
+      !Array.isArray(config.extra)
+        ? sanitizeExtra(config.extra)
+        : undefined,
   };
 }
 
 /**
  * Sanitize extra object: only string/number/boolean/string[] values; keys and strings bounded.
  */
-function sanitizeExtra(extra: Record<string, unknown>): Record<string, string | number | boolean | string[]> {
+function sanitizeExtra(
+  extra: Record<string, unknown>
+): Record<string, string | number | boolean | string[]> {
   const out: Record<string, string | number | boolean | string[]> = {};
   try {
     for (const key of Object.keys(extra).slice(0, 20)) {
@@ -228,7 +272,11 @@ function sanitizeExtra(extra: Record<string, unknown>): Record<string, string | 
       if (typeof v === "string") out[safeKey] = v.slice(0, 500);
       else if (typeof v === "number" && Number.isFinite(v)) out[safeKey] = v;
       else if (typeof v === "boolean") out[safeKey] = v;
-      else if (Array.isArray(v)) out[safeKey] = v.map((x) => safeStr(x, 200)).filter(Boolean).slice(0, 20);
+      else if (Array.isArray(v))
+        out[safeKey] = v
+          .map((x) => safeStr(x, 200))
+          .filter(Boolean)
+          .slice(0, 20);
     }
   } catch {
     // ignore
@@ -250,14 +298,18 @@ function buildPayload(normalized: LLMConfig): LLMPayload {
     if (normalized.mode === "auto-extract") {
       const extracted = autoExtract();
       base.title = (normalized.title ?? extracted.title) || undefined;
-      base.description = (normalized.description ?? extracted.description) || undefined;
+      base.description =
+        (normalized.description ?? extracted.description) || undefined;
       if (extracted.outline.length > 0) base.outline = extracted.outline;
     } else {
-      if (normalized.title !== undefined && normalized.title !== "") base.title = normalized.title;
-      if (normalized.description !== undefined && normalized.description !== "") base.description = normalized.description;
+      if (normalized.title !== undefined && normalized.title !== "")
+        base.title = normalized.title;
+      if (normalized.description !== undefined && normalized.description !== "")
+        base.description = normalized.description;
     }
 
-    if (normalized.tags && normalized.tags.length > 0) base.tags = normalized.tags;
+    if (normalized.tags && normalized.tags.length > 0)
+      base.tags = normalized.tags;
     if (normalized.canonicalUrl) base.canonicalUrl = normalized.canonicalUrl;
     if (normalized.language) base.language = normalized.language;
     if (normalized.ogType) base.ogType = normalized.ogType;
@@ -268,7 +320,8 @@ function buildPayload(normalized: LLMConfig): LLMPayload {
     if (normalized.publishedTime) base.publishedTime = normalized.publishedTime;
     if (normalized.modifiedTime) base.modifiedTime = normalized.modifiedTime;
     if (normalized.robots) base.robots = normalized.robots;
-    if (normalized.extra && Object.keys(normalized.extra).length > 0) base.extra = normalized.extra;
+    if (normalized.extra && Object.keys(normalized.extra).length > 0)
+      base.extra = normalized.extra;
 
     return base;
   } catch {
