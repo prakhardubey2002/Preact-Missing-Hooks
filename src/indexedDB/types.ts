@@ -32,4 +32,4 @@ export interface OperationCallbacks<T = unknown> {
 }
 
 /** Options for transaction. */
-export interface TransactionOptions extends OperationCallbacks<void> { }
+export type TransactionOptions = OperationCallbacks<void>;

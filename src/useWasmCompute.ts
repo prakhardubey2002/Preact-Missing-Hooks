@@ -4,7 +4,7 @@
  * @module useWasmCompute
  */
 
-import { useState, useCallback, useRef, useEffect } from 'preact/hooks';
+import { useState, useCallback, useRef, useEffect } from "preact/hooks";
 
 const WASM_WORKER_SCRIPT = `
 self.onmessage = async (e) => {
@@ -63,22 +63,27 @@ export interface UseWasmComputeReturn<TInput = number, TResult = number> {
 }
 
 function isSSR(): boolean {
-  return typeof window === 'undefined';
+  return typeof window === "undefined";
 }
 
 function isWorkerSupported(): boolean {
-  return typeof Worker !== 'undefined';
+  return typeof Worker !== "undefined";
 }
 
 function isWebAssemblySupported(): boolean {
-  return typeof WebAssembly !== 'undefined' && typeof WebAssembly.instantiate === 'function';
+  return (
+    typeof WebAssembly !== "undefined" &&
+    typeof WebAssembly.instantiate === "function"
+  );
 }
 
 function createWorker(workerUrl?: string): Worker {
   if (workerUrl) {
     return new Worker(workerUrl);
   }
-  const blob = new Blob([WASM_WORKER_SCRIPT], { type: 'application/javascript' });
+  const blob = new Blob([WASM_WORKER_SCRIPT], {
+    type: "application/javascript",
+  });
   const url = URL.createObjectURL(blob);
   const w = new Worker(url);
   URL.revokeObjectURL(url);
@@ -99,7 +104,7 @@ function createWorker(workerUrl?: string): Worker {
 export function useWasmCompute<TInput = number, TResult = number>(
   options: UseWasmComputeOptions
 ): UseWasmComputeReturn<TInput, TResult> {
-  const { wasmUrl, exportName = 'compute', workerUrl, importObject } = options;
+  const { wasmUrl, exportName = "compute", workerUrl, importObject } = options;
 
   const [result, setResult] = useState<TResult | undefined>(undefined);
   const [loading, setLoading] = useState(true);
@@ -112,17 +117,17 @@ export function useWasmCompute<TInput = number, TResult = number>(
 
   useEffect(() => {
     if (isSSR()) {
-      setError('useWasmCompute is not available during SSR');
+      setError("useWasmCompute is not available during SSR");
       setLoading(false);
       return;
     }
     if (!isWorkerSupported()) {
-      setError('Worker is not supported in this environment');
+      setError("Worker is not supported in this environment");
       setLoading(false);
       return;
     }
     if (!isWebAssemblySupported()) {
-      setError('WebAssembly is not supported in this environment');
+      setError("WebAssembly is not supported in this environment");
       setLoading(false);
       return;
     }
@@ -134,13 +139,13 @@ export function useWasmCompute<TInput = number, TResult = number>(
 
     const onMessage = (e: MessageEvent) => {
       const { type, result: msgResult, error: msgError } = e.data ?? {};
-      if (type === 'ready') {
+      if (type === "ready") {
         setReady(true);
         setLoading(false);
         return;
       }
-      if (type === 'error') {
-        setError(msgError ?? 'Unknown error');
+      if (type === "error") {
+        setError(msgError ?? "Unknown error");
         setLoading(false);
         if (pendingRejectRef.current) {
           pendingRejectRef.current(new Error(msgError));
@@ -149,7 +154,7 @@ export function useWasmCompute<TInput = number, TResult = number>(
         }
         return;
       }
-      if (type === 'result') {
+      if (type === "result") {
         setResult(msgResult);
         setLoading(false);
         if (pendingResolveRef.current) {
@@ -160,20 +165,20 @@ export function useWasmCompute<TInput = number, TResult = number>(
       }
     };
 
-    worker.addEventListener('message', onMessage);
+    worker.addEventListener("message", onMessage);
     worker.postMessage({
-      type: 'init',
+      type: "init",
       wasmUrl,
       exportName,
       importObject: importObject ?? {},
     });
 
     return () => {
-      worker.removeEventListener('message', onMessage);
+      worker.removeEventListener("message", onMessage);
       worker.terminate();
       workerRef.current = null;
       if (pendingRejectRef.current) {
-        pendingRejectRef.current(new Error('Worker terminated'));
+        pendingRejectRef.current(new Error("Worker terminated"));
         pendingResolveRef.current = null;
         pendingRejectRef.current = null;
       }
@@ -184,7 +189,7 @@ export function useWasmCompute<TInput = number, TResult = number>(
     (input: TInput): Promise<TResult> => {
       return new Promise((resolve, reject) => {
         if (!workerRef.current || !ready) {
-          reject(new Error('WASM not ready'));
+          reject(new Error("WASM not ready"));
           return;
         }
         if (error) {
@@ -194,7 +199,7 @@ export function useWasmCompute<TInput = number, TResult = number>(
         pendingResolveRef.current = resolve;
         pendingRejectRef.current = reject;
         setLoading(true);
-        workerRef.current.postMessage({ type: 'compute', input });
+        workerRef.current.postMessage({ type: "compute", input });
       });
     },
     [ready, error]

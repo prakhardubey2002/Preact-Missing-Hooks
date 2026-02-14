@@ -1,9 +1,9 @@
-import { useState, useCallback, useRef, useEffect } from 'preact/hooks';
+import { useState, useCallback, useRef, useEffect } from "preact/hooks";
 
 /** Lower number = higher priority. Default priority when not specified. */
 const DEFAULT_PRIORITY = 1;
 
-export type ThreadedWorkerMode = 'sequential' | 'parallel';
+export type ThreadedWorkerMode = "sequential" | "parallel";
 
 export interface UseThreadedWorkerOptions {
   /** Sequential: single worker, priority-ordered. Parallel: worker pool. */
@@ -55,7 +55,7 @@ export function useThreadedWorker<TData, TResult>(
   options: UseThreadedWorkerOptions
 ): UseThreadedWorkerReturn<TData, TResult> {
   const { mode, concurrency = 4 } = options;
-  const maxConcurrent = mode === 'sequential' ? 1 : Math.max(1, concurrency);
+  const maxConcurrent = mode === "sequential" ? 1 : Math.max(1, concurrency);
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TResult | undefined>(undefined);
@@ -118,7 +118,7 @@ export function useThreadedWorker<TData, TResult>(
   const run = useCallback(
     (data: TData, runOptions?: RunOptions): Promise<TResult> => {
       if (terminatedRef.current) {
-        return Promise.reject(new Error('Worker is terminated'));
+        return Promise.reject(new Error("Worker is terminated"));
       }
       const priority = runOptions?.priority ?? DEFAULT_PRIORITY;
       const sequence = ++sequenceRef.current;
@@ -136,7 +136,7 @@ export function useThreadedWorker<TData, TResult>(
   const clearQueue = useCallback(() => {
     const pending = queueRef.current;
     queueRef.current = [];
-    pending.forEach((t) => t.reject(new Error('Task cleared from queue')));
+    pending.forEach((t) => t.reject(new Error("Task cleared from queue")));
     updateQueueSize();
     if (activeCountRef.current === 0) setLoading(false);
   }, [updateQueueSize]);

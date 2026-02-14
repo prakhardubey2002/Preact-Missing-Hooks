@@ -3,10 +3,14 @@
  * @module useWorkerNotifications
  */
 
-import { useState, useRef, useEffect, useMemo } from 'preact/hooks';
+import { useState, useRef, useEffect, useMemo } from "preact/hooks";
 
 /** Supported worker event types for tracking. Worker should postMessage with these shapes. */
-export type WorkerEventType = 'task_start' | 'task_end' | 'task_fail' | 'queue_size';
+export type WorkerEventType =
+  | "task_start"
+  | "task_end"
+  | "task_fail"
+  | "queue_size";
 
 export interface WorkerNotificationEvent {
   type: WorkerEventType;
@@ -53,21 +57,21 @@ export interface UseWorkerNotificationsReturn {
 }
 
 function parseMessage(data: unknown): WorkerNotificationEvent | null {
-  if (data == null || typeof data !== 'object') return null;
+  if (data == null || typeof data !== "object") return null;
   const d = data as Record<string, unknown>;
   const type = d.type as string;
   if (
-    type !== 'task_start' &&
-    type !== 'task_end' &&
-    type !== 'task_fail' &&
-    type !== 'queue_size'
+    type !== "task_start" &&
+    type !== "task_end" &&
+    type !== "task_fail" &&
+    type !== "queue_size"
   ) {
     return null;
   }
-  const taskId = typeof d.taskId === 'string' ? d.taskId : undefined;
-  const duration = typeof d.duration === 'number' ? d.duration : undefined;
-  const error = typeof d.error === 'string' ? d.error : undefined;
-  const size = typeof d.size === 'number' ? d.size : undefined;
+  const taskId = typeof d.taskId === "string" ? d.taskId : undefined;
+  const duration = typeof d.duration === "number" ? d.duration : undefined;
+  const error = typeof d.error === "string" ? d.error : undefined;
+  const size = typeof d.size === "number" ? d.size : undefined;
   return {
     type: type as WorkerEventType,
     taskId,
@@ -96,7 +100,9 @@ export function useWorkerNotifications(
   const [runningTasks, setRunningTasks] = useState<string[]>([]);
   const [completedCount, setCompletedCount] = useState(0);
   const [failedCount, setFailedCount] = useState(0);
-  const [eventHistory, setEventHistory] = useState<WorkerNotificationEvent[]>([]);
+  const [eventHistory, setEventHistory] = useState<WorkerNotificationEvent[]>(
+    []
+  );
   const [currentQueueSize, setCurrentQueueSize] = useState(0);
 
   const completedTimestampsRef = useRef<number[]>([]);
@@ -115,11 +121,11 @@ export function useWorkerNotifications(
         return next;
       });
 
-      if (ev.type === 'task_start' && ev.taskId) {
+      if (ev.type === "task_start" && ev.taskId) {
         setRunningTasks((prev) =>
           prev.includes(ev.taskId!) ? prev : [...prev, ev.taskId!]
         );
-      } else if (ev.type === 'task_end') {
+      } else if (ev.type === "task_end") {
         if (ev.taskId) {
           setRunningTasks((prev) => prev.filter((id) => id !== ev.taskId));
         }
@@ -129,22 +135,22 @@ export function useWorkerNotifications(
           ...completedTimestampsRef.current.filter((t) => t >= cutoff),
           ev.timestamp,
         ];
-        if (typeof ev.duration === 'number') {
+        if (typeof ev.duration === "number") {
           durationSumRef.current += ev.duration;
           durationCountRef.current += 1;
         }
-      } else if (ev.type === 'task_fail') {
+      } else if (ev.type === "task_fail") {
         if (ev.taskId) {
           setRunningTasks((prev) => prev.filter((id) => id !== ev.taskId));
         }
         setFailedCount((c) => c + 1);
-      } else if (ev.type === 'queue_size' && typeof ev.size === 'number') {
+      } else if (ev.type === "queue_size" && typeof ev.size === "number") {
         setCurrentQueueSize(ev.size);
       }
     };
 
-    worker.addEventListener('message', onMessage);
-    return () => worker.removeEventListener('message', onMessage);
+    worker.addEventListener("message", onMessage);
+    return () => worker.removeEventListener("message", onMessage);
   }, [worker, maxHistory]);
 
   const averageDurationMs = useMemo(() => {
@@ -156,7 +162,9 @@ export function useWorkerNotifications(
   const throughputPerSecond = useMemo(() => {
     const now = Date.now();
     const cutoff = now - throughputWindowMs;
-    const timestamps = completedTimestampsRef.current.filter((t) => t >= cutoff);
+    const timestamps = completedTimestampsRef.current.filter(
+      (t) => t >= cutoff
+    );
     return timestamps.length / (throughputWindowMs / 1000);
   }, [eventHistory, throughputWindowMs]);
 

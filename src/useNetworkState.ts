@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useState } from "preact/hooks";
 
 /** Network Information API (not in all browsers) */
 interface NetworkInformation extends EventTarget {
@@ -10,18 +10,18 @@ interface NetworkInformation extends EventTarget {
 }
 
 /** Effective connection type from Network Information API */
-export type EffectiveConnectionType = 'slow-2g' | '2g' | '3g' | '4g';
+export type EffectiveConnectionType = "slow-2g" | "2g" | "3g" | "4g";
 
 /** Network connection type (e.g., wifi, cellular) */
 export type ConnectionType =
-  | 'bluetooth'
-  | 'cellular'
-  | 'ethernet'
-  | 'mixed'
-  | 'none'
-  | 'other'
-  | 'unknown'
-  | 'wifi';
+  | "bluetooth"
+  | "cellular"
+  | "ethernet"
+  | "mixed"
+  | "none"
+  | "other"
+  | "unknown"
+  | "wifi";
 
 export interface NetworkState {
   /** Whether the browser is online */
@@ -39,7 +39,7 @@ export interface NetworkState {
 }
 
 function getNetworkState(): NetworkState {
-  if (typeof navigator === 'undefined') {
+  if (typeof navigator === "undefined") {
     return { online: true };
   }
 
@@ -47,8 +47,9 @@ function getNetworkState(): NetworkState {
     online: navigator.onLine,
   };
 
-  const connection =
-    (navigator as Navigator & { connection?: NetworkInformation }).connection;
+  const connection = (
+    navigator as Navigator & { connection?: NetworkInformation }
+  ).connection;
 
   if (connection) {
     if (connection.effectiveType !== undefined) {
@@ -88,7 +89,7 @@ function getNetworkState(): NetworkState {
  *       {effectiveType && ` (${effectiveType})`}
  *       {saveData && ' - Reduced data mode'}
  *     </div>
-   * );
+ * );
  * }
  * ```
  */
@@ -96,24 +97,25 @@ export function useNetworkState(): NetworkState {
   const [state, setState] = useState<NetworkState>(getNetworkState);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     const updateState = () => setState(getNetworkState());
 
-    window.addEventListener('online', updateState);
-    window.addEventListener('offline', updateState);
+    window.addEventListener("online", updateState);
+    window.addEventListener("offline", updateState);
 
-    const connection = (navigator as Navigator & { connection?: NetworkInformation })
-      .connection;
+    const connection = (
+      navigator as Navigator & { connection?: NetworkInformation }
+    ).connection;
     if (connection?.addEventListener) {
-      connection.addEventListener('change', updateState);
+      connection.addEventListener("change", updateState);
     }
 
     return () => {
-      window.removeEventListener('online', updateState);
-      window.removeEventListener('offline', updateState);
+      window.removeEventListener("online", updateState);
+      window.removeEventListener("offline", updateState);
       if (connection?.removeEventListener) {
-        connection.removeEventListener('change', updateState);
+        connection.removeEventListener("change", updateState);
       }
     };
   }, []);

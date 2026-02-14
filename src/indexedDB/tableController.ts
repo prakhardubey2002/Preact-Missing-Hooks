@@ -4,8 +4,8 @@
  * @module indexedDB/tableController
  */
 
-import type { OperationCallbacks } from './types';
-import { requestToPromise } from './requestToPromise';
+import type { OperationCallbacks } from "./types";
+import { requestToPromise } from "./requestToPromise";
 
 /** Runs optional callbacks and returns the result. */
 function withCallbacks<T>(
@@ -27,35 +27,50 @@ function withCallbacks<T>(
 /**
  * Standalone table controller: opens a new transaction for each operation.
  */
-function createStandaloneController(db: IDBDatabase, tableName: string): ITableController {
+function createStandaloneController(
+  db: IDBDatabase,
+  tableName: string
+): ITableController {
   function getStore(mode: IDBTransactionMode): IDBObjectStore {
     const tx = db.transaction([tableName], mode);
     return tx.objectStore(tableName);
   }
 
   return {
-    insert<T>(data: T, options?: OperationCallbacks<IDBValidKey>): Promise<IDBValidKey> {
-      const store = getStore('readwrite');
+    insert<T>(
+      data: T,
+      options?: OperationCallbacks<IDBValidKey>
+    ): Promise<IDBValidKey> {
+      const store = getStore("readwrite");
       return withCallbacks(requestToPromise(store.add(data)), options);
     },
 
-    update<T>(key: IDBValidKey, updates: Partial<T>, options?: OperationCallbacks<void>): Promise<void> {
-      const store = getStore('readwrite');
+    update<T>(
+      key: IDBValidKey,
+      updates: Partial<T>,
+      options?: OperationCallbacks<void>
+    ): Promise<void> {
+      const store = getStore("readwrite");
       const getReq = store.get(key);
       return withCallbacks(
-        requestToPromise(getReq).then((existing) => {
-          if (existing === undefined) {
-            throw new DOMException('Key not found', 'NotFoundError');
-          }
-          const merged = { ...existing, ...updates } as T;
-          return requestToPromise(store.put(merged));
-        }).then(() => undefined),
+        requestToPromise(getReq)
+          .then((existing) => {
+            if (existing === undefined) {
+              throw new DOMException("Key not found", "NotFoundError");
+            }
+            const merged = { ...existing, ...updates } as T;
+            return requestToPromise(store.put(merged));
+          })
+          .then(() => undefined),
         options
       );
     },
 
-    delete(key: IDBValidKey, options?: OperationCallbacks<void>): Promise<void> {
-      const store = getStore('readwrite');
+    delete(
+      key: IDBValidKey,
+      options?: OperationCallbacks<void>
+    ): Promise<void> {
+      const store = getStore("readwrite");
       return withCallbacks(
         requestToPromise(store.delete(key)).then(() => undefined),
         options
@@ -63,12 +78,15 @@ function createStandaloneController(db: IDBDatabase, tableName: string): ITableC
     },
 
     exists(key: IDBValidKey): Promise<boolean> {
-      const store = getStore('readonly');
+      const store = getStore("readonly");
       return requestToPromise(store.getKey(key)).then((k) => k !== undefined);
     },
 
-    query<T>(filterFn: (item: T) => boolean, options?: OperationCallbacks<T[]>): Promise<T[]> {
-      const store = getStore('readonly');
+    query<T>(
+      filterFn: (item: T) => boolean,
+      options?: OperationCallbacks<T[]>
+    ): Promise<T[]> {
+      const store = getStore("readonly");
       const request = store.openCursor();
       const results: T[] = [];
       return withCallbacks(
@@ -82,19 +100,26 @@ function createStandaloneController(db: IDBDatabase, tableName: string): ITableC
               resolve(results);
             }
           };
-          request.onerror = () => reject(request.error ?? new DOMException('Unknown error'));
+          request.onerror = () =>
+            reject(request.error ?? new DOMException("Unknown error"));
         }),
         options
       );
     },
 
-    upsert<T>(data: T, options?: OperationCallbacks<IDBValidKey>): Promise<IDBValidKey> {
-      const store = getStore('readwrite');
+    upsert<T>(
+      data: T,
+      options?: OperationCallbacks<IDBValidKey>
+    ): Promise<IDBValidKey> {
+      const store = getStore("readwrite");
       return withCallbacks(requestToPromise(store.put(data)), options);
     },
 
-    bulkInsert<T>(items: T[], options?: OperationCallbacks<IDBValidKey[]>): Promise<IDBValidKey[]> {
-      const store = getStore('readwrite');
+    bulkInsert<T>(
+      items: T[],
+      options?: OperationCallbacks<IDBValidKey[]>
+    ): Promise<IDBValidKey[]> {
+      const store = getStore("readwrite");
       const keys: IDBValidKey[] = [];
       if (items.length === 0) {
         return withCallbacks(Promise.resolve(keys), options);
@@ -111,14 +136,15 @@ function createStandaloneController(db: IDBDatabase, tableName: string): ITableC
             keys[i] = req.result;
             onDone();
           };
-          req.onerror = () => reject(req.error ?? new DOMException('Unknown error'));
+          req.onerror = () =>
+            reject(req.error ?? new DOMException("Unknown error"));
         });
       });
       return withCallbacks(promise, options);
     },
 
     clear(options?: OperationCallbacks<void>): Promise<void> {
-      const store = getStore('readwrite');
+      const store = getStore("readwrite");
       return withCallbacks(
         requestToPromise(store.clear()).then(() => undefined),
         options
@@ -126,7 +152,7 @@ function createStandaloneController(db: IDBDatabase, tableName: string): ITableC
     },
 
     count(options?: OperationCallbacks<number>): Promise<number> {
-      const store = getStore('readonly');
+      const store = getStore("readonly");
       return withCallbacks(requestToPromise(store.count()), options ?? {});
     },
   };
@@ -135,32 +161,47 @@ function createStandaloneController(db: IDBDatabase, tableName: string): ITableC
 /**
  * Transaction-scoped table controller: uses the given transaction (no new transaction).
  */
-function createTransactionController(tx: IDBTransaction, tableName: string): ITableController {
+function createTransactionController(
+  tx: IDBTransaction,
+  tableName: string
+): ITableController {
   function getStore(): IDBObjectStore {
     return tx.objectStore(tableName);
   }
 
   return {
-    insert<T>(data: T, options?: OperationCallbacks<IDBValidKey>): Promise<IDBValidKey> {
+    insert<T>(
+      data: T,
+      options?: OperationCallbacks<IDBValidKey>
+    ): Promise<IDBValidKey> {
       const store = getStore();
       return withCallbacks(requestToPromise(store.add(data)), options);
     },
 
-    update<T>(key: IDBValidKey, updates: Partial<T>, options?: OperationCallbacks<void>): Promise<void> {
+    update<T>(
+      key: IDBValidKey,
+      updates: Partial<T>,
+      options?: OperationCallbacks<void>
+    ): Promise<void> {
       const store = getStore();
       return withCallbacks(
-        requestToPromise(store.get(key)).then((existing) => {
-          if (existing === undefined) {
-            throw new DOMException('Key not found', 'NotFoundError');
-          }
-          const merged = { ...existing, ...updates } as T;
-          return requestToPromise(store.put(merged));
-        }).then(() => undefined),
+        requestToPromise(store.get(key))
+          .then((existing) => {
+            if (existing === undefined) {
+              throw new DOMException("Key not found", "NotFoundError");
+            }
+            const merged = { ...existing, ...updates } as T;
+            return requestToPromise(store.put(merged));
+          })
+          .then(() => undefined),
         options
       );
     },
 
-    delete(key: IDBValidKey, options?: OperationCallbacks<void>): Promise<void> {
+    delete(
+      key: IDBValidKey,
+      options?: OperationCallbacks<void>
+    ): Promise<void> {
       const store = getStore();
       return withCallbacks(
         requestToPromise(store.delete(key)).then(() => undefined),
@@ -173,7 +214,10 @@ function createTransactionController(tx: IDBTransaction, tableName: string): ITa
       return requestToPromise(store.getKey(key)).then((k) => k !== undefined);
     },
 
-    query<T>(filterFn: (item: T) => boolean, options?: OperationCallbacks<T[]>): Promise<T[]> {
+    query<T>(
+      filterFn: (item: T) => boolean,
+      options?: OperationCallbacks<T[]>
+    ): Promise<T[]> {
       const store = getStore();
       const request = store.openCursor();
       const results: T[] = [];
@@ -188,18 +232,25 @@ function createTransactionController(tx: IDBTransaction, tableName: string): ITa
               resolve(results);
             }
           };
-          request.onerror = () => reject(request.error ?? new DOMException('Unknown error'));
+          request.onerror = () =>
+            reject(request.error ?? new DOMException("Unknown error"));
         }),
         options
       );
     },
 
-    upsert<T>(data: T, options?: OperationCallbacks<IDBValidKey>): Promise<IDBValidKey> {
+    upsert<T>(
+      data: T,
+      options?: OperationCallbacks<IDBValidKey>
+    ): Promise<IDBValidKey> {
       const store = getStore();
       return withCallbacks(requestToPromise(store.put(data)), options);
     },
 
-    bulkInsert<T>(items: T[], options?: OperationCallbacks<IDBValidKey[]>): Promise<IDBValidKey[]> {
+    bulkInsert<T>(
+      items: T[],
+      options?: OperationCallbacks<IDBValidKey[]>
+    ): Promise<IDBValidKey[]> {
       const store = getStore();
       const keys: IDBValidKey[] = [];
       if (items.length === 0) {
@@ -214,7 +265,8 @@ function createTransactionController(tx: IDBTransaction, tableName: string): ITa
             completed++;
             if (completed === items.length) resolve(keys);
           };
-          req.onerror = () => reject(req.error ?? new DOMException('Unknown error'));
+          req.onerror = () =>
+            reject(req.error ?? new DOMException("Unknown error"));
         });
       });
       return withCallbacks(promise, options);
@@ -237,21 +289,43 @@ function createTransactionController(tx: IDBTransaction, tableName: string): ITa
 
 /** Public interface for a table controller (standalone or transaction-scoped). */
 export interface ITableController {
-  insert<T>(data: T, options?: OperationCallbacks<IDBValidKey>): Promise<IDBValidKey>;
-  update<T>(key: IDBValidKey, updates: Partial<T>, options?: OperationCallbacks<void>): Promise<void>;
+  insert<T>(
+    data: T,
+    options?: OperationCallbacks<IDBValidKey>
+  ): Promise<IDBValidKey>;
+  update<T>(
+    key: IDBValidKey,
+    updates: Partial<T>,
+    options?: OperationCallbacks<void>
+  ): Promise<void>;
   delete(key: IDBValidKey, options?: OperationCallbacks<void>): Promise<void>;
   exists(key: IDBValidKey): Promise<boolean>;
-  query<T>(filterFn: (item: T) => boolean, options?: OperationCallbacks<T[]>): Promise<T[]>;
-  upsert<T>(data: T, options?: OperationCallbacks<IDBValidKey>): Promise<IDBValidKey>;
-  bulkInsert<T>(items: T[], options?: OperationCallbacks<IDBValidKey[]>): Promise<IDBValidKey[]>;
+  query<T>(
+    filterFn: (item: T) => boolean,
+    options?: OperationCallbacks<T[]>
+  ): Promise<T[]>;
+  upsert<T>(
+    data: T,
+    options?: OperationCallbacks<IDBValidKey>
+  ): Promise<IDBValidKey>;
+  bulkInsert<T>(
+    items: T[],
+    options?: OperationCallbacks<IDBValidKey[]>
+  ): Promise<IDBValidKey[]>;
   clear(options?: OperationCallbacks<void>): Promise<void>;
   count(options?: OperationCallbacks<number>): Promise<number>;
 }
 
-export function createTableController(db: IDBDatabase, tableName: string): ITableController {
+export function createTableController(
+  db: IDBDatabase,
+  tableName: string
+): ITableController {
   return createStandaloneController(db, tableName);
 }
 
-export function createTransactionTableController(tx: IDBTransaction, tableName: string): ITableController {
+export function createTransactionTableController(
+  tx: IDBTransaction,
+  tableName: string
+): ITableController {
   return createTransactionController(tx, tableName);
 }

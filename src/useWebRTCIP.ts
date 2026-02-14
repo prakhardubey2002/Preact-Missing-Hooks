@@ -4,12 +4,13 @@
  * @module useWebRTCIP
  */
 
-import { useEffect, useState, useRef } from 'preact/hooks';
+import { useEffect, useState, useRef } from "preact/hooks";
 
 /** IPv4 regex for ICE candidate strings (captures dotted-decimal). */
-const IPV4_REGEX = /\b(?:25[0-5]|2[0-4]\d|1?\d{1,2})(?:\.(?:25[0-5]|2[0-4]\d|1?\d{1,2})){3}\b/g;
+const IPV4_REGEX =
+  /\b(?:25[0-5]|2[0-4]\d|1?\d{1,2})(?:\.(?:25[0-5]|2[0-4]\d|1?\d{1,2})){3}\b/g;
 
-const DEFAULT_STUN_SERVERS: string[] = ['stun:stun.l.google.com:19302'];
+const DEFAULT_STUN_SERVERS: string[] = ["stun:stun.l.google.com:19302"];
 const DEFAULT_TIMEOUT_MS = 3000;
 
 export interface UseWebRTCIPOptions {
@@ -31,11 +32,11 @@ export interface UseWebRTCIPReturn {
 }
 
 function isSSR(): boolean {
-  return typeof window === 'undefined';
+  return typeof window === "undefined";
 }
 
 function isWebRTCAvailable(): boolean {
-  return typeof RTCPeerConnection !== 'undefined';
+  return typeof RTCPeerConnection !== "undefined";
 }
 
 /**
@@ -62,7 +63,9 @@ function extractIPv4FromCandidate(candidate: string): string[] {
  * })
  * // If ips is empty and error is set, fall back to: fetch('https://api.ipify.org?format=json')
  */
-export function useWebRTCIP(options: UseWebRTCIPOptions = {}): UseWebRTCIPReturn {
+export function useWebRTCIP(
+  options: UseWebRTCIPOptions = {}
+): UseWebRTCIPReturn {
   const {
     stunServers = DEFAULT_STUN_SERVERS,
     timeout: timeoutMs = DEFAULT_TIMEOUT_MS,
@@ -82,13 +85,13 @@ export function useWebRTCIP(options: UseWebRTCIPOptions = {}): UseWebRTCIPReturn
   useEffect(() => {
     if (isSSR()) {
       setLoading(false);
-      setError('WebRTC IP detection is not available during SSR');
+      setError("WebRTC IP detection is not available during SSR");
       return;
     }
 
     if (!isWebRTCAvailable()) {
       setLoading(false);
-      setError('RTCPeerConnection is not available');
+      setError("RTCPeerConnection is not available");
       return;
     }
 
@@ -130,25 +133,27 @@ export function useWebRTCIP(options: UseWebRTCIPOptions = {}): UseWebRTCIPReturn
         found.forEach(addIP);
       };
 
-      pc.createDataChannel('');
+      pc.createDataChannel("");
 
       pc.createOffer()
         .then((offer) => pc.setLocalDescription(offer))
         .catch((err) => {
-          setError(err instanceof Error ? err.message : 'Failed to create offer');
+          setError(
+            err instanceof Error ? err.message : "Failed to create offer"
+          );
           finish();
         });
 
       timeoutRef.current = setTimeout(() => finish(), timeoutMs);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'WebRTC setup failed');
+      setError(err instanceof Error ? err.message : "WebRTC setup failed");
       finish();
     }
 
     return () => {
       finish();
     };
-  }, [stunServers.join(','), timeoutMs]);
+  }, [stunServers.join(","), timeoutMs]);
 
   return { ips, loading, error };
 }

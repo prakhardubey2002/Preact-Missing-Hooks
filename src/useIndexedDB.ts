@@ -4,13 +4,13 @@
  * @module useIndexedDB
  */
 
-import { useState, useEffect, useRef } from 'preact/hooks';
-import type { IndexedDBConfig } from './indexedDB/types';
-import { openDB } from './indexedDB/openDB';
-import { createDBController } from './indexedDB/dbController';
-import type { IDBController } from './indexedDB/dbController';
+import { useState, useEffect, useRef } from "preact/hooks";
+import type { IndexedDBConfig } from "./indexedDB/types";
+import { openDB } from "./indexedDB/openDB";
+import { createDBController } from "./indexedDB/dbController";
+import type { IDBController } from "./indexedDB/dbController";
 
-export type { IndexedDBConfig, IDBController } from './indexedDB';
+export type { IndexedDBConfig, IDBController } from "./indexedDB";
 
 export interface UseIndexedDBReturn {
   /** Database controller (table, transaction). Null until the database is open. */

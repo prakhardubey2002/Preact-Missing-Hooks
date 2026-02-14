@@ -1,10 +1,13 @@
-import { useState, useCallback } from 'preact/hooks';
+import { useState, useCallback } from "preact/hooks";
 
 /**
  * Mimics React's useTransition hook in Preact.
  * @returns [startTransition, isPending]
  */
-export function useTransition(): [startTransition: (callback: () => void) => void, isPending: boolean] {
+export function useTransition(): [
+  startTransition: (callback: () => void) => void,
+  isPending: boolean,
+] {
   const [isPending, setIsPending] = useState(false);
 
   const startTransition = useCallback((callback: () => void) => {

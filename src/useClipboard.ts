@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'preact/hooks';
+import { useCallback, useState } from "preact/hooks";
 
 export interface UseClipboardOptions {
   /** Duration in ms to keep `copied` true before resetting. Default: 2000 */
@@ -37,7 +37,9 @@ export interface UseClipboardReturn {
  * }
  * ```
  */
-export function useClipboard(options: UseClipboardOptions = {}): UseClipboardReturn {
+export function useClipboard(
+  options: UseClipboardOptions = {}
+): UseClipboardReturn {
   const { resetDelay = 2000 } = options;
 
   const [copied, setCopied] = useState(false);
@@ -52,8 +54,8 @@ export function useClipboard(options: UseClipboardOptions = {}): UseClipboardRet
     async (text: string): Promise<boolean> => {
       setError(null);
 
-      if (typeof navigator === 'undefined' || !navigator.clipboard) {
-        const err = new Error('Clipboard API is not available');
+      if (typeof navigator === "undefined" || !navigator.clipboard) {
+        const err = new Error("Clipboard API is not available");
         setError(err);
         return false;
       }
@@ -77,10 +79,10 @@ export function useClipboard(options: UseClipboardOptions = {}): UseClipboardRet
   const paste = useCallback(async (): Promise<string> => {
     setError(null);
 
-    if (typeof navigator === 'undefined' || !navigator.clipboard) {
-      const err = new Error('Clipboard API is not available');
+    if (typeof navigator === "undefined" || !navigator.clipboard) {
+      const err = new Error("Clipboard API is not available");
       setError(err);
-      return '';
+      return "";
     }
 
     try {
@@ -89,7 +91,7 @@ export function useClipboard(options: UseClipboardOptions = {}): UseClipboardRet
     } catch (e) {
       const err = e instanceof Error ? e : new Error(String(e));
       setError(err);
-      return '';
+      return "";
     }
   }, []);
 

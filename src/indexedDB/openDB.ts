@@ -4,8 +4,7 @@
  * @module indexedDB/openDB
  */
 
-import type { IndexedDBConfig, TableSchema } from './types';
-import { requestToPromise } from './requestToPromise';
+import type { IndexedDBConfig, TableSchema } from "./types";
 
 const connectionCache = new Map<string, Promise<IDBDatabase>>();
 
@@ -25,7 +24,8 @@ export function openDB(config: IndexedDBConfig): Promise<IDBDatabase> {
 function _openDB(config: IndexedDBConfig): Promise<IDBDatabase> {
   return new Promise<IDBDatabase>((resolve, reject) => {
     const request = indexedDB.open(config.name, config.version);
-    request.onerror = () => reject(request.error ?? new DOMException('Failed to open database'));
+    request.onerror = () =>
+      reject(request.error ?? new DOMException("Failed to open database"));
     request.onsuccess = () => resolve(request.result);
     request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
       const db = (event.target as IDBOpenDBRequest).result;

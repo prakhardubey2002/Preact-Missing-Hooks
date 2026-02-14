@@ -1,32 +1,32 @@
-import type { RefObject } from 'preact'
-import { useEffect, useRef } from 'preact/hooks'
+import type { RefObject } from "preact";
+import { useEffect, useRef } from "preact/hooks";
 
 export interface RageClickPayload {
   /** Number of clicks that triggered the rage click */
-  count: number
+  count: number;
   /** Last click event (e.g. for Sentry context) */
-  event: MouseEvent
+  event: MouseEvent;
 }
 
 export interface UseRageClickOptions {
   /** Called when a rage click is detected. Use this to report to Sentry or your error tracker. */
-  onRageClick: (payload: RageClickPayload) => void
+  onRageClick: (payload: RageClickPayload) => void;
   /** Minimum number of clicks in the time window to count as rage click. Default: 5 (Sentry-style). */
-  threshold?: number
+  threshold?: number;
   /** Time window in ms. Default: 1000. */
-  timeWindow?: number
+  timeWindow?: number;
   /** Max distance in px between clicks to count as same spot. Default: 30. Set to Infinity to ignore distance. */
-  distanceThreshold?: number
+  distanceThreshold?: number;
 }
 
 interface ClickRecord {
-  time: number
-  x: number
-  y: number
+  time: number;
+  x: number;
+  y: number;
 }
 
 function distance(a: ClickRecord, b: ClickRecord): number {
-  return Math.hypot(b.x - a.x, b.y - a.y)
+  return Math.hypot(b.x - a.x, b.y - a.y);
 }
 
 /**
@@ -57,47 +57,47 @@ export function useRageClick(
     threshold = 5,
     timeWindow = 1000,
     distanceThreshold = 30,
-  } = options
+  } = options;
 
-  const onRageClickRef = useRef(onRageClick)
-  onRageClickRef.current = onRageClick
+  const onRageClickRef = useRef(onRageClick);
+  onRageClickRef.current = onRageClick;
 
-  const clicksRef = useRef<ClickRecord[]>([])
+  const clicksRef = useRef<ClickRecord[]>([]);
 
   useEffect(() => {
-    const node = targetRef.current
-    if (!node) return
+    const node = targetRef.current;
+    if (!node) return;
 
     const handleClick = (e: MouseEvent) => {
-      const now = Date.now()
-      const record: ClickRecord = { time: now, x: e.clientX, y: e.clientY }
+      const now = Date.now();
+      const record: ClickRecord = { time: now, x: e.clientX, y: e.clientY };
 
-      const clicks = clicksRef.current
-      const cutoff = now - timeWindow
-      const recent = clicks.filter((c) => c.time >= cutoff)
-      recent.push(record)
+      const clicks = clicksRef.current;
+      const cutoff = now - timeWindow;
+      const recent = clicks.filter((c) => c.time >= cutoff);
+      recent.push(record);
 
       if (distanceThreshold !== Infinity) {
         const inRange = recent.filter(
           (c) => distance(c, record) <= distanceThreshold
-        )
+        );
         if (inRange.length >= threshold) {
-          onRageClickRef.current({ count: inRange.length, event: e })
-          clicksRef.current = []
-          return
+          onRageClickRef.current({ count: inRange.length, event: e });
+          clicksRef.current = [];
+          return;
         }
       } else {
         if (recent.length >= threshold) {
-          onRageClickRef.current({ count: recent.length, event: e })
-          clicksRef.current = []
-          return
+          onRageClickRef.current({ count: recent.length, event: e });
+          clicksRef.current = [];
+          return;
         }
       }
 
-      clicksRef.current = recent
-    }
+      clicksRef.current = recent;
+    };
 
-    node.addEventListener('click', handleClick)
-    return () => node.removeEventListener('click', handleClick)
-  }, [targetRef, threshold, timeWindow, distanceThreshold])
+    node.addEventListener("click", handleClick);
+    return () => node.removeEventListener("click", handleClick);
+  }, [targetRef, threshold, timeWindow, distanceThreshold]);
 }

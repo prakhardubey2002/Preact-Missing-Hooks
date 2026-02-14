@@ -3,9 +3,12 @@
  * @module indexedDB/dbController
  */
 
-import type { IndexedDBConfig, TransactionOptions } from './types';
-import type { ITableController } from './tableController';
-import { createTableController, createTransactionTableController } from './tableController';
+import type { IndexedDBConfig, TransactionOptions } from "./types";
+import type { ITableController } from "./tableController";
+import {
+  createTableController,
+  createTransactionTableController,
+} from "./tableController";
 
 /** Transaction context passed to the callback: provides table(name) bound to this transaction. */
 export interface TransactionContext {
@@ -56,7 +59,11 @@ function withTransactionCallbacks(
 /**
  * Creates a database controller from an open IDBDatabase instance.
  */
-export function createDBController(db: IDBDatabase, _config: IndexedDBConfig): IDBController {
+export function createDBController(
+  db: IDBDatabase,
+  _config: IndexedDBConfig
+): IDBController {
+  void _config; // Reserved for future config options
   return {
     get db(): IDBDatabase {
       return db;
@@ -78,11 +85,13 @@ export function createDBController(db: IDBDatabase, _config: IndexedDBConfig): I
     ): Promise<void> {
       const tx = db.transaction(storeNames, mode);
       const txContext: TransactionContext = {
-        table: (tableName: string) => createTransactionTableController(tx, tableName),
+        table: (tableName: string) =>
+          createTransactionTableController(tx, tableName),
       };
       const txPromise = new Promise<void>((resolve, reject) => {
         tx.oncomplete = () => resolve();
-        tx.onerror = () => reject(tx.error ?? new DOMException('Transaction failed'));
+        tx.onerror = () =>
+          reject(tx.error ?? new DOMException("Transaction failed"));
       });
       const callbackResult = callback(txContext);
       const promise = Promise.resolve(callbackResult).then(() => txPromise);

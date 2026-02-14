@@ -1,7 +1,7 @@
-import { RefObject } from 'preact'
-import { useEffect } from 'preact/hooks'
+import { RefObject } from "preact";
+import { useEffect } from "preact/hooks";
 
-export type UseMutationObserverOptions = MutationObserverInit
+export type UseMutationObserverOptions = MutationObserverInit;
 
 /**
  * A Preact hook to observe DOM mutations using MutationObserver.
@@ -15,12 +15,12 @@ export function useMutationObserver(
   options: MutationObserverInit
 ) {
   useEffect(() => {
-    const node = targetRef.current
-    if (!node) return
+    const node = targetRef.current;
+    if (!node) return;
 
-    const observer = new MutationObserver(callback)
-    observer.observe(node, options)
+    const observer = new MutationObserver(callback);
+    observer.observe(node, options);
 
-    return () => observer.disconnect()
-  }, [targetRef, callback, options])
+    return () => observer.disconnect();
+  }, [targetRef, callback, options]);
 }
