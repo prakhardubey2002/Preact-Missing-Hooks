@@ -90,6 +90,7 @@
   },
   "scripts": {
     "build": "microbundle --alias react=preact/compat && npm run build:react && node scripts/generate-entry.cjs",
+    "llm:generate": "hayagriva-llm generate",
     "build:react": "microbundle -i src/index.ts -o dist/react.js --alias preact=react,preact/hooks=react --no-sourcemap",
     "dev": "microbundle watch",
     "prepublishOnly": "npm run build",
@@ -158,6 +159,7 @@
     "eslint": "^9.15.0",
     "eslint-config-prettier": "^9.1.0",
     "fake-indexeddb": "^6.0.2",
+    "hayagriva-llm": "^1.2.0",
     "husky": "^9.1.7",
     "jsdom": "^26.1.0",
     "microbundle": "^0.15.1",

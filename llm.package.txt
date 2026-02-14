@@ -1,0 +1,103 @@
+Package: preact-missing-hooks
+Version: 4.1.0
+
+Description:
+A lightweight, extendable collection of missing React-like hooks for Preact — plus fresh, powerful new ones designed specifically for modern Preact apps.
+
+Summary:
+Preact-Missing-Hooks is a lightweight, extendable collection of missing React-like hooks for Preact, offering both familiar hooks and fresh, powerful new ones designed specifically for modern Preact apps.
+
+When to use:
+Choose Preact-Missing-Hooks when building modern Preact applications that need advanced, React-like hooks not natively available in Preact, or when you want to leverage powerful new hooks for tasks like clipboard management, WebRTC IP detection, WebAssembly computation, IndexedDB access, or rage-click detection. It's ideal for developers seeking a lightweight, extendable hook library that works seamlessly with both Preact and React.
+
+Reason to use:
+- Provides missing React-like hooks for Preact
+- Offers powerful new hooks for modern web features
+- Lightweight and extendable
+- Framework-agnostic (works with Preact and React)
+- Production-ready with TypeScript support
+
+Use cases:
+- Building a Preact app that needs React's useTransition functionality
+- Managing clipboard operations in a Preact component
+- Detecting user rage clicks and reporting to error tracking tools
+- Running WebAssembly computations in a Web Worker
+- Accessing IndexedDB with a clean, React-like hook API
+- Observing DOM mutations reactively
+- Wrapping children components to inject additional props
+- Detecting user's preferred theme for dark/light mode support
+- Monitoring network state changes for offline/online handling
+- Tracking worker notifications and task execution in real-time
+
+Keywords:
+preact, hooks, react-hooks, useTransition, useMutationObserver, useEventBus, useWrappedChildren, usePreferredTheme, useNetworkState, useClipboard, useRageClick, useThreadedWorker, useIndexedDB, useWebRTCIP, useWasmCompute, useWorkerNotifications, typescript, modern-web
+
+
+Documentation:
+See README
+
+Related packages:
+preact, react, react-hooks, preact/hooks
+
+Exports:
+- ConnectionType : TypeScript type representing the physical connection type of the device (e.g., 'wifi', 'cellular', 'ethernet', 'none', 'unknown'). Used to determine how the device is connected to the network, which can inform decisions about data usage and performance optimizations.
+- EffectiveConnectionType : TypeScript type representing the effective connection type as defined by the Network Information API. Represents the effective connection type ('slow-2g', '2g', '3g', '4g') that the browser uses to optimize content delivery based on the user's network conditions.
+- IDBController : A class that manages IndexedDB connections and operations, providing methods to open, close, and interact with IndexedDB databases. Used for encapsulating IndexedDB logic and handling database lifecycle. — params: config: IndexedDBConfig — returns: Instance of IDBController — e.g. const db = new IDBController({ name: 'my-db' })
+- IndexedDBConfig : Configuration object for setting up an IndexedDB connection, including database name, version, and optional upgrade callback. Used to customize the IndexedDB environment for use with the IDBController. — params: { name: string, version?: number, upgradeCallback?: (db: IDBDatabase) => void } — returns: None (type definition)
+- InjectableProps : A TypeScript type that defines the shape of props that can be injected into a component, typically used for dependency injection or prop forwarding. — params: Generic type extending React.PropsWithChildren — returns: N/A
+- LLMConfig : Configuration object type for LLM integrations, defining required settings like model, API key, and optional parameters. Used to initialize and configure LLM client instances with consistent type safety. — params: { model: string, apiKey: string, temperature?: number, maxTokens?: number } — returns: LLMConfig object with typed properties for LLM initialization
+- LLMPayload : Payload type for LLM requests, encapsulating the user message and optional context for AI model interactions. Used to structure input data sent to LLM endpoints for processing and response generation. — params: { message: string, context?: string[] } — returns: LLMPayload object containing message and optional context array for LLM processing
+- NetworkState : TypeScript interface defining the structure of network state information returned by useNetworkState hook. Includes properties like online (boolean), since (Date), downlink (number), downlinkMax (number), effectiveType (EffectiveConnectionType), rtt (number), and type (ConnectionType).
+- OGType : Type definition for Open Graph metadata types used in social media sharing. — params: N/A — returns: N/A
+- PreferredTheme : A TypeScript type that defines the possible values for a preferred theme, typically 'light', 'dark', or 'no-preference'. — params: N/A — returns: 'light' | 'dark' | 'no-preference'
+- RageClickPayload : TypeScript type defining the shape of a rage click event payload. Contains properties like target element, coordinates, and timestamp to identify rapid repeated clicks on the same element. — params: Optional: { target: Element, x: number, y: number, timestamp: number } — returns: N/A
+- RunOptions : TypeScript type defining options for running threaded operations. Controls execution behavior like cancellation, timeout, and result handling for worker tasks. — params: Optional: { cancelable?: boolean, timeout?: number, onResult?: (result: any) => void } — returns: N/A
+- ThreadedWorkerMode : TypeScript enum defining operational modes for threaded workers. Specifies whether worker runs in dedicated, shared, or service worker context for different threading strategies. — params: Optional: { DEDICATED, SHARED, SERVICE_WORKER } — returns: N/A
+- useClipboard (Hook) : React hook that provides access to the system clipboard, allowing reading and writing of text content. Useful for implementing copy-to-clipboard functionality in components without requiring direct DOM manipulation or event handling. — params: options?: UseClipboardOptions — returns: UseClipboardReturn object with read and write methods — e.g. const { write } = useClipboard(); write('Hello World');
+- UseClipboardOptions : TypeScript type defining optional configuration for the useClipboard hook, such as specifying the target element for clipboard operations or setting permissions for clipboard access.
+- UseClipboardReturn : TypeScript interface defining the return value of useClipboard hook, which includes read and write methods for interacting with the system clipboard. The read method returns the current clipboard content as a string, while the write method sets new content to the clipboard.
+- useEventBus (Hook) : A hook that provides access to a global event bus for publishing and subscribing to events across components. It returns an object with methods to subscribe, unsubscribe, and publish events. — params: none — returns: { subscribe: (event: string, callback: Function) => void, unsubscribe: (event: string, callback: Function) => void, publish: (event: string, data: any) => void }
+- useIndexedDB (Hook) : React hook providing simplified IndexedDB access with React state management. Enables reading and writing to IndexedDB with automatic change detection and error handling. — params: databaseName: string, storeName: string, options?: { version?: number, keyPath?: string } — returns: UseIndexedDBReturn — e.g. const { data, error, isLoading, add, get } = useIndexedDB('myDB', 'store')
+- UseIndexedDBReturn : Return type for the useIndexedDB hook, containing the database instance and a loading/error state. Used to provide the current IndexedDB state and data to React components. — params: { db: IDBDatabase | null, loading: boolean, error: Error | null } — returns: None (type definition)
+- useLLMMetadata (Hook) : React hook for fetching and managing LLM metadata within a component's lifecycle. — params: options?: { modelId?: string } — returns: { metadata: LLMData | null, loading: boolean, error: Error | null } — e.g. const { metadata, loading } = useLLMMetadata({ modelId: 'gpt-4' });
+- useMutationObserver (Hook) : A hook that creates and manages a MutationObserver to watch for changes in the DOM. It accepts a target element and a callback to execute when mutations are observed, returning a ref to attach to the target element. — params: target: Element | null, callback: MutationCallback, options?: MutationObserverInit — returns: ref: { current: Element | null }
+- UseMutationObserverOptions : A TypeScript type defining the options object for the useMutationObserver hook, extending MutationObserverInit to include optional configuration for observing DOM mutations. — params: extends MutationObserverInit — returns: N/A
+- useNetworkState (Hook) : React hook that returns the current network state of the browser, including connection type, effective connection type, and whether the device is online or offline. Useful for adapting application behavior based on network conditions, such as reducing data usage or showing offline indicators. — params: none — returns: NetworkState object with online, since, downlink, downlinkMax, effectiveType, rtt, type properties — e.g. const network = useNetworkState(); if (!network.online) { /* show offline message */ }
+- usePreferredTheme (Hook) : A hook that detects and returns the user's preferred color scheme (light or dark) based on the operating system or browser settings. It returns the current preferred theme. — params: none — returns: 'light' | 'dark' | 'no-preference'
+- useRageClick (Hook) : React hook that detects rapid, repeated clicking (rage clicking) on an element, typically indicating user frustration or confusion. Useful for identifying problematic UI elements that may need redesign or additional feedback to improve user experience. — params: options?: { threshold?: number, timeout?: number } — returns: { isRageClicking: boolean, reset: () => void } — e.g. const { isRageClicking } = useRageClick(); if (isRageClicking) { /* show help tooltip */ }
+- UseRageClickOptions : TypeScript type defining configuration options for the useRageClick hook. Allows customizing detection threshold, debounce delay, and callback behavior for rage click detection. — params: Optional: { threshold?: number, debounce?: number, callback?: (payload: RageClickPayload) => void } — returns: N/A
+- useThreadedWorker (Hook) : React hook that manages communication with a web worker thread. Enables offloading heavy computations to a separate thread while maintaining React state synchronization. — params: options: UseThreadedWorkerOptions — returns: UseThreadedWorkerReturn — e.g. const { data, error, isLoading } = useThreadedWorker({ worker: myWorker, input: someData })
+- UseThreadedWorkerOptions : TypeScript type defining configuration options for useThreadedWorker hook. Includes worker instance, input data, transfer options, and error handling callbacks. — params: Optional: { worker: Worker, input?: any, transfer?: Transferable[], onError?: (error: Error) => void } — returns: N/A
+- UseThreadedWorkerReturn : TypeScript type defining the return value shape from useThreadedWorker hook. Contains data, error state, loading status, and control methods for worker communication. — params: Optional: { data: any, error: Error | null, isLoading: boolean, cancel: () => void, postMessage: (message: any) => void } — returns: N/A
+- useTransition (Hook) : A custom hook that wraps React's useTransition API, providing a way to mark updates as transitions to allow the browser to prioritize updates. It returns a tuple containing a boolean indicating if the transition is pending and a startTransition function to wrap state updates. — params: config?: { timeoutMs?: number } — returns: [isPending: boolean, startTransition: (callback: () => void) => void]
+- useWasmCompute (Hook) : A React hook that loads and executes WebAssembly modules for computationally intensive tasks, providing a way to run WASM code in the browser. Used for offloading heavy computations to WASM for performance gains. — params: options: UseWasmComputeOptions — returns: function that executes the WASM module with input data — e.g. const compute = useWasmCompute({ modulePath: '/compute.wasm' }); const result = compute(inputData)
+- UseWasmComputeOptions : Options object for configuring the useWasmCompute hook, including the path to the WASM module and optional initialization parameters. Used to specify which WASM module to load and how to initialize it. — params: { modulePath: string, initParams?: any } — returns: None (type definition)
+- UseWasmComputeReturn : Type definition for the return value of Wasm compute functions, typically containing status and result fields. — params: N/A — returns: N/A
+- useWebRTCIP (Hook) : A React hook that retrieves the local IP address using WebRTC by creating a peer connection and extracting the IP from ICE candidates. Used for obtaining the client's IP address in a browser environment. — params: options?: UseWebRTCIPOptions — returns: UseWebRTCIPReturn — e.g. const { ip, loading, error } = useWebRTCIP()
+- UseWebRTCIPOptions : Options object for configuring the useWebRTCIP hook, such as disabling IPv6 or setting a timeout. Used to customize the behavior of the WebRTC IP discovery process. — params: { disableIPv6?: boolean, timeout?: number } — returns: None (type definition)
+- UseWebRTCIPReturn : Return type for the useWebRTCIP hook, containing the discovered IP address and loading/error state. Used to provide the WebRTC IP discovery result to React components. — params: { ip: string | null, loading: boolean, error: Error | null } — returns: None (type definition)
+- useWorkerNotifications (Hook) : React hook that subscribes to worker notifications and manages their lifecycle within a component. — params: options: UseWorkerNotificationsOptions — returns: UseWorkerNotificationsReturn — e.g. const { notifications, error } = useWorkerNotifications({ worker: myWorker });
+- UseWorkerNotificationsOptions : Configuration options for the useWorkerNotifications hook, including worker instance and event filters. — params: N/A — returns: N/A
+- UseWorkerNotificationsReturn : Return type for useWorkerNotifications hook, providing notifications array and error state. — params: N/A — returns: N/A
+- useWrappedChildren (Hook) : A hook that wraps the children of a component with a specified wrapper component or element. It takes children and a wrapper as arguments and returns the wrapped children. — params: children: ReactNode, wrapper: ComponentType | string — returns: ReactNode
+- WorkerEventType : Enumeration type defining the different types of events that can be emitted by a worker. — params: N/A — returns: N/A
+- WorkerNotificationEvent : Type definition for worker notification events, containing event data and metadata. — params: N/A — returns: N/A
+
+Hooks:
+- useTransition
+- useMutationObserver
+- useEventBus
+- useWrappedChildren
+- usePreferredTheme
+- useNetworkState
+- useClipboard
+- useRageClick
+- useThreadedWorker
+- useIndexedDB
+- useWebRTCIP
+- useWasmCompute
+- useWorkerNotifications
+- useLLMMetadata
+
+Frameworks:
+preact, react
