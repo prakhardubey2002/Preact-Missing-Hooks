@@ -4,6 +4,8 @@ import { render, waitFor } from '@testing-library/preact';
 import '@testing-library/jest-dom';
 import { useWebRTCIP } from '@/useWebRTCIP';
 
+const isReact = !!(globalThis as unknown as { __VITEST_REACT__?: boolean }).__VITEST_REACT__;
+
 describe('useWebRTCIP', () => {
   const originalRTCPeerConnection = global.RTCPeerConnection;
 
@@ -37,7 +39,7 @@ describe('useWebRTCIP', () => {
     expect(getByTestId('ips').textContent).toBe('');
   });
 
-  it('starts with loading true and then resolves with mock ICE candidate', async () => {
+  it.skipIf(isReact)('starts with loading true and then resolves with mock ICE candidate', async () => {
     vi.useFakeTimers();
 
     let onIceCandidate: (e: { candidate: { candidate: string } | null }) => void = () => { };

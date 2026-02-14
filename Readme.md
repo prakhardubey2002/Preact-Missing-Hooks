@@ -36,7 +36,7 @@ A lightweight, extendable collection of React-like hooks for Preact, including u
 - **`useWorkerNotifications`** — Listens to a Worker's messages and maintains state: running tasks, completed/failed counts, event history, average task duration, throughput per second, and queue size. Worker posts `task_start` / `task_end` / `task_fail` / `queue_size`; returns `progress` (default view of all active worker data) plus individual stats.
 - Fully TypeScript compatible
 - Bundled with Microbundle
-- Zero dependencies (except `preact`)
+- Zero dependencies (peer: `preact` or `react` — use `/react` for React)
 
 ---
 
@@ -46,22 +46,35 @@ A lightweight, extendable collection of React-like hooks for Preact, including u
 npm install preact-missing-hooks
 ```
 
+Ensure your app has either **preact** or **react** installed (the package uses whichever is present).
+
 ---
 
 ## Import options
 
-- **Main package** — Import from the package root:
-  ```ts
-  import { useThreadedWorker, useClipboard } from 'preact-missing-hooks'
-  ```
+Use the same import in Preact and React projects:
+
+```ts
+import { useThreadedWorker, useClipboard } from "preact-missing-hooks";
+```
+
+- **How it picks Preact vs React**
+  - **CommonJS / Node:** The package detects which of `preact` or `react` is installed and uses that build automatically.
+  - **ESM (Vite, Webpack, etc.):** Default is the Preact build. In a **React** app, add the `react` condition so the package resolves to the React build:
+    - **Vite:** `vite.config.ts` → `resolve: { conditions: ['react'] }`
+    - **Webpack:** `resolve.conditionNames` (or similar) to include `'react'`
+  - **Or** in React projects you can always import from the explicit entry: `preact-missing-hooks/react`.
+
 - **Subpath exports (tree-shakeable)** — Import a single hook:
+
   ```ts
-  import { useThreadedWorker } from 'preact-missing-hooks/useThreadedWorker'
-  import { useClipboard } from 'preact-missing-hooks/useClipboard'
-  import { useWebRTCIP } from 'preact-missing-hooks/useWebRTCIP'
-  import { useWasmCompute } from 'preact-missing-hooks/useWasmCompute'
-  import { useWorkerNotifications } from 'preact-missing-hooks/useWorkerNotifications'
+  import { useThreadedWorker } from "preact-missing-hooks/useThreadedWorker";
+  import { useClipboard } from "preact-missing-hooks/useClipboard";
+  import { useWebRTCIP } from "preact-missing-hooks/useWebRTCIP";
+  import { useWasmCompute } from "preact-missing-hooks/useWasmCompute";
+  import { useWorkerNotifications } from "preact-missing-hooks/useWorkerNotifications";
   ```
+
   All hooks are available: `useTransition`, `useMutationObserver`, `useEventBus`, `useWrappedChildren`, `usePreferredTheme`, `useNetworkState`, `useClipboard`, `useRageClick`, `useThreadedWorker`, `useIndexedDB`, `useWebRTCIP`, `useWasmCompute`, `useWorkerNotifications`.
 
 ---
@@ -71,22 +84,22 @@ npm install preact-missing-hooks
 ### `useTransition`
 
 ```tsx
-import { useTransition } from 'preact-missing-hooks'
+import { useTransition } from "preact-missing-hooks";
 
 function ExampleTransition() {
-  const [startTransition, isPending] = useTransition()
+  const [startTransition, isPending] = useTransition();
 
   const handleClick = () => {
     startTransition(() => {
       // perform an expensive update here
-    })
-  }
+    });
+  };
 
   return (
     <button onClick={handleClick} disabled={isPending}>
-      {isPending ? 'Loading...' : 'Click Me'}
+      {isPending ? "Loading..." : "Click Me"}
     </button>
-  )
+  );
 }
 ```
 
@@ -95,21 +108,21 @@ function ExampleTransition() {
 ### `useMutationObserver`
 
 ```tsx
-import { useRef } from 'preact/hooks'
-import { useMutationObserver } from 'preact-missing-hooks'
+import { useRef } from "preact/hooks";
+import { useMutationObserver } from "preact-missing-hooks";
 
 function ExampleMutation() {
-  const ref = useRef<HTMLDivElement>(null)
+  const ref = useRef<HTMLDivElement>(null);
 
   useMutationObserver(
     ref,
     (mutations) => {
-      console.log('Detected mutations:', mutations)
+      console.log("Detected mutations:", mutations);
     },
-    { childList: true, subtree: true },
-  )
+    { childList: true, subtree: true }
+  );
 
-  return <div ref={ref}>Observe this content</div>
+  return <div ref={ref}>Observe this content</div>;
 }
 ```
 
@@ -120,33 +133,33 @@ function ExampleMutation() {
 ```tsx
 // types.ts
 export type Events = {
-  notify: (message: string) => void
-}
+  notify: (message: string) => void;
+};
 
 // Sender.tsx
-import { useEventBus } from 'preact-missing-hooks'
-import type { Events } from './types'
+import { useEventBus } from "preact-missing-hooks";
+import type { Events } from "./types";
 
 function Sender() {
-  const { emit } = useEventBus<Events>()
-  return <button onClick={() => emit('notify', 'Hello World!')}>Send</button>
+  const { emit } = useEventBus<Events>();
+  return <button onClick={() => emit("notify", "Hello World!")}>Send</button>;
 }
 
 // Receiver.tsx
-import { useEventBus } from 'preact-missing-hooks'
-import { useState, useEffect } from 'preact/hooks'
-import type { Events } from './types'
+import { useEventBus } from "preact-missing-hooks";
+import { useState, useEffect } from "preact/hooks";
+import type { Events } from "./types";
 
 function Receiver() {
-  const [msg, setMsg] = useState<string>('')
-  const { on } = useEventBus<Events>()
+  const [msg, setMsg] = useState<string>("");
+  const { on } = useEventBus<Events>();
 
   useEffect(() => {
-    const unsubscribe = on('notify', setMsg)
-    return unsubscribe
-  }, [])
+    const unsubscribe = on("notify", setMsg);
+    return unsubscribe;
+  }, []);
 
-  return <div>Message: {msg}</div>
+  return <div>Message: {msg}</div>;
 }
 ```
 
@@ -155,19 +168,19 @@ function Receiver() {
 ### `useWrappedChildren`
 
 ```tsx
-import { useWrappedChildren } from 'preact-missing-hooks'
+import { useWrappedChildren } from "preact-missing-hooks";
 
 function ParentComponent({ children }) {
   // Inject common props into all children
   const injectProps = {
-    className: 'enhanced-child',
-    onClick: () => console.log('Child clicked!'),
-    style: { border: '1px solid #ccc' },
-  }
+    className: "enhanced-child",
+    onClick: () => console.log("Child clicked!"),
+    style: { border: "1px solid #ccc" },
+  };
 
-  const wrappedChildren = useWrappedChildren(children, injectProps)
+  const wrappedChildren = useWrappedChildren(children, injectProps);
 
-  return <div className="parent">{wrappedChildren}</div>
+  return <div className="parent">{wrappedChildren}</div>;
 }
 
 // Usage with preserve strategy (default - existing props are preserved)
@@ -175,21 +188,21 @@ function PreserveExample() {
   return (
     <ParentComponent>
       <button className="btn">Existing class preserved</button>
-      <span style={{ color: 'red' }}>Both styles applied</span>
+      <span style={{ color: "red" }}>Both styles applied</span>
     </ParentComponent>
-  )
+  );
 }
 
 // Usage with override strategy (injected props override existing ones)
 function OverrideExample() {
-  const injectProps = { className: 'new-class' }
+  const injectProps = { className: "new-class" };
   const children = (
     <button className="old-class">Class will be overridden</button>
-  )
+  );
 
-  const wrappedChildren = useWrappedChildren(children, injectProps, 'override')
+  const wrappedChildren = useWrappedChildren(children, injectProps, "override");
 
-  return <div>{wrappedChildren}</div>
+  return <div>{wrappedChildren}</div>;
 }
 ```
 
@@ -198,12 +211,12 @@ function OverrideExample() {
 ### `usePreferredTheme`
 
 ```tsx
-import { usePreferredTheme } from 'preact-missing-hooks'
+import { usePreferredTheme } from "preact-missing-hooks";
 
 function ThemeAwareComponent() {
-  const theme = usePreferredTheme() // 'light' | 'dark' | 'no-preference'
+  const theme = usePreferredTheme(); // 'light' | 'dark' | 'no-preference'
 
-  return <div data-theme={theme}>Your system prefers: {theme}</div>
+  return <div data-theme={theme}>Your system prefers: {theme}</div>;
 }
 ```
 
@@ -212,18 +225,18 @@ function ThemeAwareComponent() {
 ### `useNetworkState`
 
 ```tsx
-import { useNetworkState } from 'preact-missing-hooks'
+import { useNetworkState } from "preact-missing-hooks";
 
 function NetworkStatus() {
-  const { online, effectiveType, saveData } = useNetworkState()
+  const { online, effectiveType, saveData } = useNetworkState();
 
   return (
     <div>
-      Status: {online ? 'Online' : 'Offline'}
+      Status: {online ? "Online" : "Offline"}
       {effectiveType && ` (${effectiveType})`}
-      {saveData && ' — Reduced data mode enabled'}
+      {saveData && " — Reduced data mode enabled"}
     </div>
-  )
+  );
 }
 ```
 
@@ -232,34 +245,34 @@ function NetworkStatus() {
 ### `useClipboard`
 
 ```tsx
-import { useState } from 'preact/hooks'
-import { useClipboard } from 'preact-missing-hooks'
+import { useState } from "preact/hooks";
+import { useClipboard } from "preact-missing-hooks";
 
 function CopyButton() {
-  const { copy, copied, error } = useClipboard({ resetDelay: 2000 })
+  const { copy, copied, error } = useClipboard({ resetDelay: 2000 });
 
   return (
-    <button onClick={() => copy('Hello, World!')}>
-      {copied ? 'Copied!' : 'Copy'}
+    <button onClick={() => copy("Hello, World!")}>
+      {copied ? "Copied!" : "Copy"}
     </button>
-  )
+  );
 }
 
 function PasteInput() {
-  const [text, setText] = useState('')
-  const { paste } = useClipboard()
+  const [text, setText] = useState("");
+  const { paste } = useClipboard();
 
   const handlePaste = async () => {
-    const content = await paste()
-    setText(content)
-  }
+    const content = await paste();
+    setText(content);
+  };
 
   return (
     <div>
       <input value={text} onChange={(e) => setText(e.target.value)} />
       <button onClick={handlePaste}>Paste</button>
     </div>
-  )
+  );
 }
 ```
 
@@ -270,26 +283,26 @@ function PasteInput() {
 Detects rage clicks (multiple rapid clicks in the same area), e.g. when the UI is unresponsive. Report them to [Sentry](https://docs.sentry.io/product/issues/issue-details/replay-issues/rage-clicks/) or your error tracker to surface rage-click issues and lower rage-click-related support.
 
 ```tsx
-import { useRef } from 'preact/hooks'
-import { useRageClick } from 'preact-missing-hooks'
+import { useRef } from "preact/hooks";
+import { useRageClick } from "preact-missing-hooks";
 
 function SubmitButton() {
-  const ref = useRef<HTMLButtonElement>(null)
+  const ref = useRef<HTMLButtonElement>(null);
 
   useRageClick(ref, {
     onRageClick: ({ count, event }) => {
       // Report to Sentry (or your error tracker) to create rage-click issues
-      Sentry.captureMessage('Rage click detected', {
-        level: 'warning',
-        extra: { count, target: event.target, tag: 'rage_click' },
-      })
+      Sentry.captureMessage("Rage click detected", {
+        level: "warning",
+        extra: { count, target: event.target, tag: "rage_click" },
+      });
     },
     threshold: 5, // min clicks (default 5, Sentry-style)
     timeWindow: 1000, // ms (default 1000)
     distanceThreshold: 30, // px (default 30)
-  })
+  });
 
-  return <button ref={ref}>Submit</button>
+  return <button ref={ref}>Submit</button>;
 }
 ```
 
@@ -300,16 +313,16 @@ function SubmitButton() {
 Runs async work in a queue with **sequential** (one task at a time, by priority) or **parallel** (worker pool) execution. Lower priority number = higher priority; same priority is FIFO.
 
 ```tsx
-import { useThreadedWorker } from 'preact-missing-hooks'
+import { useThreadedWorker } from "preact-missing-hooks";
 
 // Sequential: one task at a time, sorted by priority
-const sequential = useThreadedWorker(fetchUser, { mode: 'sequential' })
+const sequential = useThreadedWorker(fetchUser, { mode: "sequential" });
 
 // Parallel: up to N tasks at once
 const parallel = useThreadedWorker(processItem, {
-  mode: 'parallel',
+  mode: "parallel",
   concurrency: 4,
-})
+});
 
 // API (same for both modes)
 const {
@@ -320,11 +333,11 @@ const {
   queueSize, // tasks queued + running
   clearQueue, // clear pending tasks (running continue)
   terminate, // clear queue and reject new run()
-} = sequential
+} = sequential;
 
 // Run with priority (1 = highest)
-await run({ userId: 1 }, { priority: 1 })
-await run({ userId: 2 }, { priority: 3 })
+await run({ userId: 1 }, { priority: 1 });
+await run({ userId: 2 }, { priority: 3 });
 ```
 
 ---
@@ -340,40 +353,40 @@ Production-ready IndexedDB hook: database initialization, table creation (with k
 **Database API:** `db.table(name)`, `db.hasTable(name)`, `db.transaction(storeNames, mode, callback, options?)`.
 
 ```tsx
-import { useIndexedDB } from 'preact-missing-hooks'
+import { useIndexedDB } from "preact-missing-hooks";
 
 function App() {
   const { db, isReady, error } = useIndexedDB({
-    name: 'my-app-db',
+    name: "my-app-db",
     version: 1,
     tables: {
-      users: { keyPath: 'id', autoIncrement: true, indexes: ['email'] },
-      settings: { keyPath: 'key' },
+      users: { keyPath: "id", autoIncrement: true, indexes: ["email"] },
+      settings: { keyPath: "key" },
     },
-  })
+  });
 
-  if (error) return <div>Failed to open database</div>
-  if (!isReady || !db) return <div>Loading...</div>
+  if (error) return <div>Failed to open database</div>;
+  if (!isReady || !db) return <div>Loading...</div>;
 
-  const users = db.table('users')
+  const users = db.table("users");
 
   // All operations return Promises and accept optional { onSuccess, onError }
-  await users.insert({ email: 'a@b.com', name: 'Alice' })
-  await users.update(1, { name: 'Alice Smith' })
-  const found = await users.query((u) => u.email.startsWith('a@'))
-  const n = await users.count()
-  await users.delete(1)
-  await users.upsert({ id: 2, email: 'b@b.com' })
-  await users.bulkInsert([{ email: 'c@b.com' }, { email: 'd@b.com' }])
-  await users.clear()
+  await users.insert({ email: "a@b.com", name: "Alice" });
+  await users.update(1, { name: "Alice Smith" });
+  const found = await users.query((u) => u.email.startsWith("a@"));
+  const n = await users.count();
+  await users.delete(1);
+  await users.upsert({ id: 2, email: "b@b.com" });
+  await users.bulkInsert([{ email: "c@b.com" }, { email: "d@b.com" }]);
+  await users.clear();
 
   // Full transaction support
-  await db.transaction(['users', 'settings'], 'readwrite', async (tx) => {
-    await tx.table('users').insert({ email: 'e@b.com' })
-    await tx.table('settings').upsert({ key: 'theme', value: 'dark' })
-  })
+  await db.transaction(["users", "settings"], "readwrite", async (tx) => {
+    await tx.table("users").insert({ email: "e@b.com" });
+    await tx.table("settings").upsert({ key: "theme", value: "dark" });
+  });
 
-  return <div>DB ready. Tables: {db.hasTable('users') ? 'users' : ''}</div>
+  return <div>DB ready. Tables: {db.hasTable("users") ? "users" : ""}</div>;
 }
 ```
 
@@ -386,8 +399,8 @@ Detects client IP addresses using WebRTC ICE candidates and a STUN server (**fro
 Returns `{ ips: string[], loading: boolean, error: string | null }`. Options: `stunServers`, `timeout` (ms), `onDetect(ip)`.
 
 ```tsx
-import { useWebRTCIP } from 'preact-missing-hooks'
-import { useState, useEffect } from 'preact/hooks'
+import { useWebRTCIP } from "preact-missing-hooks";
+import { useState, useEffect } from "preact/hooks";
 
 function ClientIP() {
   const { ips, loading, error } = useWebRTCIP({
@@ -395,25 +408,25 @@ function ClientIP() {
     onDetect: (ip) => {
       /* optional: e.g. analytics */
     },
-  })
-  const [fallbackIP, setFallbackIP] = useState<string | null>(null)
+  });
+  const [fallbackIP, setFallbackIP] = useState<string | null>(null);
 
   // Fallback to public IP API when WebRTC fails or returns empty
   useEffect(() => {
-    if (loading || ips.length > 0) return
+    if (loading || ips.length > 0) return;
     if (error) {
-      fetch('https://api.ipify.org?format=json')
+      fetch("https://api.ipify.org?format=json")
         .then((r) => r.json())
         .then((d) => setFallbackIP(d.ip))
-        .catch(() => {})
+        .catch(() => {});
     }
-  }, [loading, ips.length, error])
+  }, [loading, ips.length, error]);
 
-  if (loading) return <p>Detecting IP…</p>
-  if (ips.length > 0) return <p>IPs (WebRTC): {ips.join(', ')}</p>
-  if (fallbackIP) return <p>IP (fallback API): {fallbackIP}</p>
-  if (error) return <p>WebRTC failed. Try fallback API.</p>
-  return null
+  if (loading) return <p>Detecting IP…</p>;
+  if (ips.length > 0) return <p>IPs (WebRTC): {ips.join(", ")}</p>;
+  if (fallbackIP) return <p>IP (fallback API): {fallbackIP}</p>;
+  if (error) return <p>WebRTC failed. Try fallback API.</p>;
+  return null;
 }
 ```
 
@@ -426,23 +439,23 @@ Runs WebAssembly computation in a Web Worker so the main thread stays responsive
 Returns `{ compute, result, loading, error, ready }`. Options: `wasmUrl` (required), `exportName` (default `'compute'`), optional `workerUrl` (custom worker script), optional `importObject` (must be serializable for the default worker).
 
 ```tsx
-import { useWasmCompute } from 'preact-missing-hooks'
+import { useWasmCompute } from "preact-missing-hooks";
 
 function AddWithWasm() {
   const { compute, result, loading, error, ready } = useWasmCompute<
     number,
     number
   >({
-    wasmUrl: '/add.wasm',
-    exportName: 'add',
-  })
+    wasmUrl: "/add.wasm",
+    exportName: "add",
+  });
 
   const handleClick = () => {
-    if (ready) compute(2).then(() => {})
-  }
+    if (ready) compute(2).then(() => {});
+  };
 
-  if (error) return <p>WASM unavailable: {error}</p>
-  if (!ready) return <p>Loading WASM…</p>
+  if (error) return <p>WASM unavailable: {error}</p>;
+  if (!ready) return <p>Loading WASM…</p>;
   return (
     <div>
       <button onClick={handleClick} disabled={loading}>
@@ -450,7 +463,7 @@ function AddWithWasm() {
       </button>
       {result != null && <p>Result: {result}</p>}
     </div>
-  )
+  );
 }
 ```
 
@@ -463,27 +476,27 @@ Listens to a Worker's `message` events and maintains state and derived stats. Yo
 Returns `runningTasks`, `completedCount`, `failedCount`, `eventHistory`, `averageDurationMs`, `throughputPerSecond`, `currentQueueSize`, and **`progress`** — a single object with all active worker data (running, completed, failed, totalProcessed, avg duration, throughput/s, queue). Options: `maxHistory` (default 100), `throughputWindowMs` (default 1000).
 
 ```tsx
-import { useWorkerNotifications } from 'preact-missing-hooks'
+import { useWorkerNotifications } from "preact-missing-hooks";
 
 function WorkerDashboard({ worker }) {
   const { progress, eventHistory } = useWorkerNotifications(worker, {
     maxHistory: 50,
-  })
+  });
 
   return (
     <div>
       <p>
-        Running: {progress.runningTasks.length} | Done:{' '}
+        Running: {progress.runningTasks.length} | Done:{" "}
         {progress.completedCount} | Failed: {progress.failedCount}
       </p>
       <p>
-        Avg: {progress.averageDurationMs.toFixed(0)}ms | Throughput:{' '}
-        {progress.throughputPerSecond.toFixed(2)}/s | Queue:{' '}
+        Avg: {progress.averageDurationMs.toFixed(0)}ms | Throughput:{" "}
+        {progress.throughputPerSecond.toFixed(2)}/s | Queue:{" "}
         {progress.currentQueueSize}
       </p>
       <small>Events: {eventHistory.length}</small>
     </div>
-  )
+  );
 }
 ```
 

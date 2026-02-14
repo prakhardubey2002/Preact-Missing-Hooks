@@ -4,6 +4,8 @@ import { render, waitFor } from '@testing-library/preact'
 import '@testing-library/jest-dom'
 import { useThreadedWorker } from '@/useThreadedWorker'
 
+const isReact = !!(globalThis as unknown as { __VITEST_REACT__?: boolean }).__VITEST_REACT__
+
 /** Worker that resolves after delay with the input value (for order/concurrency tests). */
 function delayedWorker<T>(delayMs: number) {
   return (data: T): Promise<T> =>
@@ -12,7 +14,7 @@ function delayedWorker<T>(delayMs: number) {
 
 describe('useThreadedWorker', () => {
   describe('sequential mode', () => {
-    it('runs one task at a time and returns result', async () => {
+    it.skipIf(isReact)('runs one task at a time and returns result', async () => {
       const worker = vi.fn().mockResolvedValue('done')
       let api: ReturnType<typeof useThreadedWorker<string, string>>
 

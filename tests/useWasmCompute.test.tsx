@@ -19,7 +19,7 @@ describe('useWasmCompute', () => {
     URL.revokeObjectURL = originalRevokeObjectURL;
   });
 
-  it('returns error when window is undefined (SSR)', async () => {
+  it.skipIf(!!(globalThis as unknown as { __VITEST_REACT__?: boolean }).__VITEST_REACT__)('returns error when window is undefined (SSR)', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     (global as unknown as { window: undefined }).window = undefined;

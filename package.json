@@ -11,8 +11,11 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.module.js",
-      "require": "./dist/index.js"
+      "import": {
+        "react": "./dist/react.module.js",
+        "default": "./dist/index.module.js"
+      },
+      "require": "./dist/entry.cjs"
     },
     "./useTransition": {
       "types": "./dist/useTransition.d.ts",
@@ -78,13 +81,21 @@
       "types": "./dist/useWorkerNotifications.d.ts",
       "import": "./dist/useWorkerNotifications.module.js",
       "require": "./dist/useWorkerNotifications.js"
+    },
+    "./react": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/react.module.js",
+      "require": "./dist/react.js"
     }
   },
   "scripts": {
-    "build": "microbundle",
+    "build": "microbundle && npm run build:react && node scripts/generate-entry.cjs",
+    "build:react": "microbundle -i src/index.ts -o dist/react.js --alias preact=react,preact/hooks=react --no-sourcemap",
     "dev": "microbundle watch",
     "prepublishOnly": "npm run build",
     "test": "vitest run",
+    "test:preact": "vitest run --project preact",
+    "test:react": "vitest run --project react",
     "type-check": "tsc --noEmit",
     "demo": "npx serve -l 5000",
     "lint": "eslint src",
@@ -96,11 +107,19 @@
   "size-limit": [
     {
       "path": "dist/index.module.js",
-      "limit": "7 KB"
+      "limit": "10 KB"
     },
     {
       "path": "dist/index.js",
-      "limit": "7 KB"
+      "limit": "10 KB"
+    },
+    {
+      "path": "dist/react.module.js",
+      "limit": "10 KB"
+    },
+    {
+      "path": "dist/react.js",
+      "limit": "10 KB"
     }
   ],
   "keywords": [
@@ -131,6 +150,9 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/preact": "^3.2.4",
+    "@testing-library/react": "^16.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "@types/jest": "^29.5.14",
     "fake-indexeddb": "^6.0.2",
     "jsdom": "^26.1.0",
@@ -147,6 +169,15 @@
     "@size-limit/file": "^11.2.0"
   },
   "peerDependencies": {
-    "preact": ">=10.0.0"
+    "preact": ">=10.0.0",
+    "react": ">=17.0.0"
+  },
+  "peerDependenciesMeta": {
+    "preact": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
   }
 }

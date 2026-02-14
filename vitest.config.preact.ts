@@ -8,15 +8,13 @@ export default defineConfig({
     },
   },
   test: {
+    name: "preact",
     globals: true,
     environment: "jsdom",
     setupFiles: [],
     include: ["tests/**/*.test.{ts,tsx}"],
     poolOptions: {
-      threads: {
-        maxThreads: 8,
-        minThreads: 1,
-      },
+      threads: { maxThreads: 8, minThreads: 1 },
     },
   },
 });
