@@ -11,5 +11,12 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: [],
+
+    poolOptions: {
+      threads: {
+        maxThreads: 8,  
+        minThreads: 1,
+      }
+    }
   },
 });
