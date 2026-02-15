@@ -1,322 +1,277 @@
 {
   "name": "preact-missing-hooks",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "description": "A lightweight, extendable collection of missing React-like hooks for Preact — plus fresh, powerful new ones designed specifically for modern Preact apps.",
   "exports": {
     "useTransition": {
       "type": "function",
-      "description": "A custom hook that wraps React's useTransition API, providing a way to mark updates as transitions to allow the browser to prioritize updates. It returns a tuple containing a boolean indicating if the transition is pending and a startTransition function to wrap state updates.",
+      "description": "A hook that provides a transition state and a function to start a transition. It is used to defer non-urgent updates to avoid blocking the UI during high-priority updates.",
       "hook": true,
-      "params": "config?: { timeoutMs?: number }",
-      "returns": "[isPending: boolean, startTransition: (callback: () => void) => void]",
-      "sideEffect": false
+      "params": "options?: { timeoutMs?: number }",
+      "returns": "Array containing a boolean indicating if a transition is in progress and a function to start a transition"
     },
     "useMutationObserver": {
       "type": "function",
-      "description": "A hook that creates and manages a MutationObserver to watch for changes in the DOM. It accepts a target element and a callback to execute when mutations are observed, returning a ref to attach to the target element.",
+      "description": "A hook that observes DOM mutations on a given element and calls a callback when mutations occur. It is useful for reacting to changes in the DOM structure or attributes.",
       "hook": true,
-      "params": "target: Element | null, callback: MutationCallback, options?: MutationObserverInit",
-      "returns": "ref: { current: Element | null }",
-      "sideEffect": false
+      "params": "element: Element, callback: (mutations: MutationRecord[]) => void, options?: MutationObserverInit",
+      "returns": "void"
     },
     "UseMutationObserverOptions": {
       "type": "type",
-      "description": "A TypeScript type defining the options object for the useMutationObserver hook, extending MutationObserverInit to include optional configuration for observing DOM mutations.",
+      "description": "An interface defining the options for the useMutationObserver hook. It extends MutationObserverInit and includes additional properties specific to the hook.",
       "hook": false,
-      "params": "extends MutationObserverInit",
+      "params": "N/A",
       "returns": "N/A"
     },
     "useEventBus": {
       "type": "function",
-      "description": "A hook that provides access to a global event bus for publishing and subscribing to events across components. It returns an object with methods to subscribe, unsubscribe, and publish events.",
+      "description": "A hook that provides a simple event bus for component communication. It allows components to emit and listen to events without prop drilling.",
       "hook": true,
-      "params": "none",
-      "returns": "{ subscribe: (event: string, callback: Function) => void, unsubscribe: (event: string, callback: Function) => void, publish: (event: string, data: any) => void }",
-      "sideEffect": false
+      "params": "N/A",
+      "returns": "Object with emit and on methods for event handling"
     },
     "useWrappedChildren": {
       "type": "function",
-      "description": "A hook that wraps the children of a component with a specified wrapper component or element. It takes children and a wrapper as arguments and returns the wrapped children.",
+      "description": "A hook that wraps child components with additional functionality or styling. It is useful for applying consistent behavior or appearance to a group of child components.",
       "hook": true,
-      "params": "children: ReactNode, wrapper: ComponentType | string",
-      "returns": "ReactNode",
-      "sideEffect": false
+      "params": "children: ReactNode, wrapper: (child: ReactNode) => ReactNode",
+      "returns": "ReactNode"
     },
     "InjectableProps": {
       "type": "type",
-      "description": "A TypeScript type that defines the shape of props that can be injected into a component, typically used for dependency injection or prop forwarding.",
+      "description": "An interface defining the props that can be injected into a component. It is used to specify the properties that can be dynamically added to a component.",
       "hook": false,
-      "params": "Generic type extending React.PropsWithChildren",
+      "params": "N/A",
       "returns": "N/A"
     },
     "usePreferredTheme": {
       "type": "function",
-      "description": "A hook that detects and returns the user's preferred color scheme (light or dark) based on the operating system or browser settings. It returns the current preferred theme.",
+      "description": "A hook that provides the user's preferred theme (light or dark) based on system preferences or user settings. It is useful for implementing theme-aware components.",
       "hook": true,
-      "params": "none",
-      "returns": "'light' | 'dark' | 'no-preference'",
-      "sideEffect": false
+      "params": "N/A",
+      "returns": "String representing the preferred theme ('light' or 'dark')"
     },
     "PreferredTheme": {
       "type": "type",
-      "description": "A TypeScript type that defines the possible values for a preferred theme, typically 'light', 'dark', or 'no-preference'.",
+      "description": "A type alias for the possible theme values ('light' or 'dark'). It is used to ensure type safety when working with theme-related values.",
       "hook": false,
       "params": "N/A",
-      "returns": "'light' | 'dark' | 'no-preference'"
+      "returns": "N/A"
     },
     "useNetworkState": {
       "type": "function",
-      "description": "React hook that returns the current network state of the browser, including connection type, effective connection type, and whether the device is online or offline. Useful for adapting application behavior based on network conditions, such as reducing data usage or showing offline indicators.",
+      "description": "React hook that returns the current network state of the device, including connection type, effective connection type, and whether the device is online or offline. It uses the browser's Network Information API to provide real-time updates when the network conditions change.",
       "hook": true,
-      "params": "none",
-      "returns": "NetworkState object with online, since, downlink, downlinkMax, effectiveType, rtt, type properties",
-      "example": "const network = useNetworkState(); if (!network.online) { /* show offline message */ }"
+      "params": "options?: { refreshRate?: number }",
+      "returns": "NetworkState: { online: boolean, since: number, downlink: number, downlinkMax: number, effectiveType: EffectiveConnectionType, rtt: number, saveData: boolean, type: ConnectionType }",
+      "example": "const { online, type, effectiveType } = useNetworkState()"
     },
     "EffectiveConnectionType": {
       "type": "type",
-      "description": "TypeScript type representing the effective connection type as defined by the Network Information API. Represents the effective connection type ('slow-2g', '2g', '3g', '4g') that the browser uses to optimize content delivery based on the user's network conditions.",
-      "hook": false
+      "description": "TypeScript type representing the effective connection type as defined by the Network Information API. It includes values like 'slow-2g', '2g', '3g', '4g' that indicate the effective network speed the browser detects.",
+      "hook": false,
+      "example": "'slow-2g' | '2g' | '3g' | '4g'"
     },
     "ConnectionType": {
       "type": "type",
-      "description": "TypeScript type representing the physical connection type of the device (e.g., 'wifi', 'cellular', 'ethernet', 'none', 'unknown'). Used to determine how the device is connected to the network, which can inform decisions about data usage and performance optimizations.",
-      "hook": false
+      "description": "TypeScript type representing the connection type as defined by the Network Information API. It includes values like 'bluetooth', 'cellular', 'ethernet', 'wifi', 'wimax', 'none', 'unknown', 'other' that indicate the physical connection type.",
+      "hook": false,
+      "example": "'bluetooth' | 'cellular' | 'ethernet' | 'wifi' | 'wimax' | 'none' | 'unknown' | 'other'"
     },
     "NetworkState": {
       "type": "type",
-      "description": "TypeScript interface defining the structure of network state information returned by useNetworkState hook. Includes properties like online (boolean), since (Date), downlink (number), downlinkMax (number), effectiveType (EffectiveConnectionType), rtt (number), and type (ConnectionType).",
-      "hook": false
+      "description": "TypeScript type representing the complete network state object returned by useNetworkState hook. It includes online status, timestamps, bandwidth information, effective connection type, round-trip time, data saver status, and connection type.",
+      "hook": false,
+      "example": "{ online: boolean, since: number, downlink: number, downlinkMax: number, effectiveType: EffectiveConnectionType, rtt: number, saveData: boolean, type: ConnectionType }"
     },
     "useClipboard": {
       "type": "function",
-      "description": "React hook that provides access to the system clipboard, allowing reading and writing of text content. Useful for implementing copy-to-clipboard functionality in components without requiring direct DOM manipulation or event handling.",
+      "description": "React hook that provides access to the system clipboard, allowing reading and writing of clipboard content. It returns an object with methods to read and write text to the clipboard, handling browser compatibility and permissions.",
       "hook": true,
       "params": "options?: UseClipboardOptions",
-      "returns": "UseClipboardReturn object with read and write methods",
-      "example": "const { write } = useClipboard(); write('Hello World');"
+      "returns": "UseClipboardReturn: { readText: () => Promise<string>, writeText: (text: string) => Promise<void> }",
+      "example": "const { readText, writeText } = useClipboard()"
     },
     "UseClipboardOptions": {
       "type": "type",
-      "description": "TypeScript type defining optional configuration for the useClipboard hook, such as specifying the target element for clipboard operations or setting permissions for clipboard access.",
-      "hook": false
+      "description": "TypeScript type representing the options object for the useClipboard hook. Currently it may include configuration options for clipboard behavior, though the exact properties depend on the implementation.",
+      "hook": false,
+      "example": "{}"
     },
     "UseClipboardReturn": {
       "type": "type",
-      "description": "TypeScript interface defining the return value of useClipboard hook, which includes read and write methods for interacting with the system clipboard. The read method returns the current clipboard content as a string, while the write method sets new content to the clipboard.",
-      "hook": false
+      "description": "TypeScript type representing the return value of the useClipboard hook. It includes readText and writeText methods that return promises for asynchronous clipboard operations.",
+      "hook": false,
+      "example": "{ readText: () => Promise<string>, writeText: (text: string) => Promise<void> }"
     },
     "useRageClick": {
       "type": "function",
-      "description": "React hook that detects rapid, repeated clicking (rage clicking) on an element, typically indicating user frustration or confusion. Useful for identifying problematic UI elements that may need redesign or additional feedback to improve user experience.",
+      "description": "React hook that detects rapid, repeated clicks on an element, commonly known as rage clicks. It helps identify user frustration by tracking multiple clicks in quick succession and provides a callback when such behavior is detected.",
       "hook": true,
-      "params": "options?: { threshold?: number, timeout?: number }",
-      "returns": "{ isRageClicking: boolean, reset: () => void }",
-      "example": "const { isRageClicking } = useRageClick(); if (isRageClicking) { /* show help tooltip */ }"
+      "params": "options?: { threshold?: number, timeWindow?: number, callback?: (event: MouseEvent) => void }",
+      "returns": "void",
+      "example": "useRageClick({ threshold: 3, timeWindow: 1000, callback: (event) => console.log('Rage click detected!') })"
     },
     "RageClickPayload": {
       "type": "type",
-      "description": "TypeScript type defining the shape of a rage click event payload. Contains properties like target element, coordinates, and timestamp to identify rapid repeated clicks on the same element.",
-      "hook": false,
-      "params": "Optional: { target: Element, x: number, y: number, timestamp: number }",
-      "returns": "N/A",
-      "sideEffect": false
+      "description": "Interface describing the payload structure for rage click events, typically containing timestamp, element info, and click count. Used when tracking rapid repeated clicks for UX analysis or error reporting.",
+      "hook": false
     },
     "UseRageClickOptions": {
       "type": "type",
-      "description": "TypeScript type defining configuration options for the useRageClick hook. Allows customizing detection threshold, debounce delay, and callback behavior for rage click detection.",
-      "hook": false,
-      "params": "Optional: { threshold?: number, debounce?: number, callback?: (payload: RageClickPayload) => void }",
-      "returns": "N/A",
-      "sideEffect": false
+      "description": "Configuration options for the useRageClick hook, including threshold for clicks per second, timeout duration, and callback handler. Allows customization of rage click detection sensitivity and behavior.",
+      "hook": false
     },
     "useThreadedWorker": {
       "type": "function",
-      "description": "React hook that manages communication with a web worker thread. Enables offloading heavy computations to a separate thread while maintaining React state synchronization.",
+      "description": "Hook that creates and manages a Web Worker thread for offloading heavy computations or operations. Returns worker instance and control methods for communication and lifecycle management.",
       "hook": true,
       "params": "options: UseThreadedWorkerOptions",
       "returns": "UseThreadedWorkerReturn",
-      "sideEffect": false,
-      "example": "const { data, error, isLoading } = useThreadedWorker({ worker: myWorker, input: someData })"
+      "example": "const { worker, postMessage, terminate } = useThreadedWorker({ worker: myWorker });"
     },
     "ThreadedWorkerMode": {
       "type": "type",
-      "description": "TypeScript enum defining operational modes for threaded workers. Specifies whether worker runs in dedicated, shared, or service worker context for different threading strategies.",
-      "hook": false,
-      "params": "Optional: { DEDICATED, SHARED, SERVICE_WORKER }",
-      "returns": "N/A",
-      "sideEffect": false
+      "description": "Enumeration defining worker modes: 'shared' for SharedWorker instances or 'dedicated' for standard Web Workers. Determines how worker threads are instantiated and shared across components.",
+      "hook": false
     },
     "UseThreadedWorkerOptions": {
       "type": "type",
-      "description": "TypeScript type defining configuration options for useThreadedWorker hook. Includes worker instance, input data, transfer options, and error handling callbacks.",
-      "hook": false,
-      "params": "Optional: { worker: Worker, input?: any, transfer?: Transferable[], onError?: (error: Error) => void }",
-      "returns": "N/A",
-      "sideEffect": false
+      "description": "Configuration object for useThreadedWorker hook containing worker script URL or blob, mode selection, and optional initialization parameters. Defines how the worker thread should be created and configured.",
+      "hook": false
     },
     "RunOptions": {
       "type": "type",
-      "description": "TypeScript type defining options for running threaded operations. Controls execution behavior like cancellation, timeout, and result handling for worker tasks.",
-      "hook": false,
-      "params": "Optional: { cancelable?: boolean, timeout?: number, onResult?: (result: any) => void }",
-      "returns": "N/A",
-      "sideEffect": false
+      "description": "Options object for controlling execution behavior of threaded operations, including timeout settings, retry logic, and error handling strategies. Used to customize how tasks run in worker threads.",
+      "hook": false
     },
     "UseThreadedWorkerReturn": {
       "type": "type",
-      "description": "TypeScript type defining the return value shape from useThreadedWorker hook. Contains data, error state, loading status, and control methods for worker communication.",
-      "hook": false,
-      "params": "Optional: { data: any, error: Error | null, isLoading: boolean, cancel: () => void, postMessage: (message: any) => void }",
-      "returns": "N/A",
-      "sideEffect": false
+      "description": "Return type from useThreadedWorker hook containing worker instance, message posting method, event listeners, and cleanup functions. Provides complete interface for interacting with the managed worker thread.",
+      "hook": false
     },
     "useIndexedDB": {
       "type": "function",
-      "description": "React hook providing simplified IndexedDB access with React state management. Enables reading and writing to IndexedDB with automatic change detection and error handling.",
+      "description": "Hook for managing IndexedDB database operations including opening connections, reading, writing, and deleting data. Provides reactive state management for database changes and error handling.",
       "hook": true,
-      "params": "databaseName: string, storeName: string, options?: { version?: number, keyPath?: string }",
-      "returns": "UseIndexedDBReturn",
-      "sideEffect": false,
-      "example": "const { data, error, isLoading, add, get } = useIndexedDB('myDB', 'store')"
+      "params": "dbName: string, options?: { version?: number, objectStores?: string[] }",
+      "returns": "{ db: IDBDatabase | null, error: Error | null, isOpen: boolean, close: () => void }",
+      "example": "const { db, isOpen, error } = useIndexedDB('myDatabase');"
     },
     "IndexedDBConfig": {
       "type": "type",
-      "description": "Configuration object for setting up an IndexedDB connection, including database name, version, and optional upgrade callback. Used to customize the IndexedDB environment for use with the IDBController.",
+      "description": "Configuration object for IndexedDB operations, specifying database name, version, and store schema. Use when setting up persistent client-side storage with custom store structures.",
       "hook": false,
-      "params": "{ name: string, version?: number, upgradeCallback?: (db: IDBDatabase) => void }",
-      "returns": "None (type definition)",
-      "sideEffect": false
+      "params": "{ dbName: string, version?: number, stores: { name: string, keyPath?: string, autoIncrement?: boolean }[] }"
     },
     "IDBController": {
       "type": "class",
-      "description": "A class that manages IndexedDB connections and operations, providing methods to open, close, and interact with IndexedDB databases. Used for encapsulating IndexedDB logic and handling database lifecycle.",
+      "description": "Controller class managing IndexedDB instance lifecycle, providing methods to open, close, and interact with the database. Use when you need programmatic control over IndexedDB operations beyond basic hooks.",
       "hook": false,
-      "params": "config: IndexedDBConfig",
-      "returns": "Instance of IDBController",
-      "sideEffect": false,
-      "example": "const db = new IDBController({ name: 'my-db' })"
+      "params": "constructor(config: IndexedDBConfig)",
+      "returns": "IDBController instance with open(), close(), getStore(), and transaction methods"
     },
     "UseIndexedDBReturn": {
       "type": "type",
-      "description": "Return type for the useIndexedDB hook, containing the database instance and a loading/error state. Used to provide the current IndexedDB state and data to React components.",
+      "description": "Return type from useIndexedDB hook containing database instance, store references, and utility methods. Use to access structured data operations and transaction capabilities within React components.",
       "hook": false,
-      "params": "{ db: IDBDatabase | null, loading: boolean, error: Error | null }",
-      "returns": "None (type definition)",
-      "sideEffect": false
+      "params": "{ db: IDBDatabase, stores: Record<string, IDBObjectStore>, transaction: (stores: string[], mode?: IDBTransactionMode) => IDBTransaction }"
     },
     "useWebRTCIP": {
       "type": "function",
-      "description": "A React hook that retrieves the local IP address using WebRTC by creating a peer connection and extracting the IP from ICE candidates. Used for obtaining the client's IP address in a browser environment.",
+      "description": "Hook that retrieves local WebRTC IP addresses by creating a peer connection and parsing ICE candidates. Use when you need to detect client IP addresses for WebRTC signaling or network diagnostics.",
       "hook": true,
       "params": "options?: UseWebRTCIPOptions",
-      "returns": "UseWebRTCIPReturn",
-      "sideEffect": false,
-      "example": "const { ip, loading, error } = useWebRTCIP()"
+      "returns": "UseWebRTCIPReturn containing ipAddresses: string[] and loading: boolean"
     },
     "UseWebRTCIPOptions": {
       "type": "type",
-      "description": "Options object for configuring the useWebRTCIP hook, such as disabling IPv6 or setting a timeout. Used to customize the behavior of the WebRTC IP discovery process.",
+      "description": "Configuration options for useWebRTCIP hook, allowing customization of timeout duration and STUN/TURN server configuration. Use to control how long the hook waits for ICE gathering and which servers to use.",
       "hook": false,
-      "params": "{ disableIPv6?: boolean, timeout?: number }",
-      "returns": "None (type definition)",
-      "sideEffect": false
+      "params": "{ timeout?: number, iceServers?: RTCIceServer[] }"
     },
     "UseWebRTCIPReturn": {
       "type": "type",
-      "description": "Return type for the useWebRTCIP hook, containing the discovered IP address and loading/error state. Used to provide the WebRTC IP discovery result to React components.",
+      "description": "Return object from useWebRTCIP hook containing detected IP addresses and loading state. Use to access the gathered IP addresses and determine when the operation is complete.",
       "hook": false,
-      "params": "{ ip: string | null, loading: boolean, error: Error | null }",
-      "returns": "None (type definition)",
-      "sideEffect": false
+      "params": "{ ipAddresses: string[], loading: boolean }"
     },
     "useWasmCompute": {
       "type": "function",
-      "description": "A React hook that loads and executes WebAssembly modules for computationally intensive tasks, providing a way to run WASM code in the browser. Used for offloading heavy computations to WASM for performance gains.",
+      "description": "Hook that loads and executes WebAssembly modules for high-performance computation in the browser. Use when you need to run CPU-intensive tasks like image processing, cryptography, or numerical computations without blocking the main thread.",
       "hook": true,
       "params": "options: UseWasmComputeOptions",
-      "returns": "function that executes the WASM module with input data",
-      "sideEffect": false,
-      "example": "const compute = useWasmCompute({ modulePath: '/compute.wasm' }); const result = compute(inputData)"
+      "returns": "Promise resolving to Wasm module instance with exported functions"
     },
     "UseWasmComputeOptions": {
       "type": "type",
-      "description": "Options object for configuring the useWasmCompute hook, including the path to the WASM module and optional initialization parameters. Used to specify which WASM module to load and how to initialize it.",
+      "description": "Configuration object for useWasmCompute hook specifying WASM module source, imports, and execution parameters. Use to configure memory limits, import objects, and execution environment for WebAssembly modules.",
       "hook": false,
-      "params": "{ modulePath: string, initParams?: any }",
-      "returns": "None (type definition)",
-      "sideEffect": false
+      "params": "{ moduleUrl: string, imports?: Record<string, any>, memorySize?: number }"
     },
     "UseWasmComputeReturn": {
       "type": "type",
-      "description": "Type definition for the return value of Wasm compute functions, typically containing status and result fields.",
-      "hook": false,
-      "params": "N/A",
-      "returns": "N/A"
+      "description": "Type definition for the return value of a WASM compute function. Represents the structured result of a WebAssembly-based computation, typically containing status, data, and error information.",
+      "hook": false
     },
     "useWorkerNotifications": {
       "type": "function",
-      "description": "React hook that subscribes to worker notifications and manages their lifecycle within a component.",
+      "description": "React hook that subscribes to notifications from a Web Worker. Provides real-time updates from background processing tasks, allowing components to react to worker events without manual event listener management.",
       "hook": true,
       "params": "options: UseWorkerNotificationsOptions",
       "returns": "UseWorkerNotificationsReturn",
-      "example": "const { notifications, error } = useWorkerNotifications({ worker: myWorker });"
+      "example": "const { notifications, error } = useWorkerNotifications({ worker: myWorker })"
     },
     "WorkerEventType": {
       "type": "type",
-      "description": "Enumeration type defining the different types of events that can be emitted by a worker.",
-      "hook": false,
-      "params": "N/A",
-      "returns": "N/A"
+      "description": "Enumeration of possible event types that can be emitted by a Web Worker. Defines the standard set of notification categories for worker-to-main-thread communication, enabling type-safe event handling.",
+      "hook": false
     },
     "WorkerNotificationEvent": {
       "type": "type",
-      "description": "Type definition for worker notification events, containing event data and metadata.",
-      "hook": false,
-      "params": "N/A",
-      "returns": "N/A"
+      "description": "Type definition for a worker notification event object. Contains metadata about a specific event from a Web Worker, including type, timestamp, and payload data for structured communication.",
+      "hook": false
     },
     "UseWorkerNotificationsOptions": {
       "type": "type",
-      "description": "Configuration options for the useWorkerNotifications hook, including worker instance and event filters.",
-      "hook": false,
-      "params": "N/A",
-      "returns": "N/A"
+      "description": "Configuration object type for the useWorkerNotifications hook. Specifies parameters like the worker instance, event filters, and optional callback handlers for customizing notification subscription behavior.",
+      "hook": false
     },
     "UseWorkerNotificationsReturn": {
       "type": "type",
-      "description": "Return type for useWorkerNotifications hook, providing notifications array and error state.",
-      "hook": false,
-      "params": "N/A",
-      "returns": "N/A"
+      "description": "Return type for the useWorkerNotifications hook. Provides an object containing the current notifications array, error state, and optional methods for managing the subscription to worker events.",
+      "hook": false
     },
     "useLLMMetadata": {
       "type": "function",
-      "description": "React hook for fetching and managing LLM metadata within a component's lifecycle.",
+      "description": "React hook that retrieves metadata about the underlying LLVM/WebAssembly compilation environment. Provides information about the current runtime capabilities, version, and available features for debugging and optimization.",
       "hook": true,
-      "params": "options?: { modelId?: string }",
-      "returns": "{ metadata: LLMData | null, loading: boolean, error: Error | null }",
-      "example": "const { metadata, loading } = useLLMMetadata({ modelId: 'gpt-4' });"
+      "returns": "object containing metadata properties",
+      "example": "const metadata = useLLMMetadata()"
     },
     "OGType": {
       "type": "type",
-      "description": "Type definition for Open Graph metadata types used in social media sharing.",
-      "hook": false,
-      "params": "N/A",
-      "returns": "N/A"
+      "description": "Type definition for Open Graph metadata types. Represents the standardized vocabulary for social media sharing metadata, used to control how content appears when shared on platforms like Facebook and Twitter.",
+      "hook": false
     },
     "LLMConfig": {
       "type": "type",
-      "description": "Configuration object type for LLM integrations, defining required settings like model, API key, and optional parameters. Used to initialize and configure LLM client instances with consistent type safety.",
+      "description": "Configuration object for setting up an LLM client, including model details, API keys, and connection parameters. Use this to define how the LLM should behave and connect.",
       "hook": false,
-      "params": "{ model: string, apiKey: string, temperature?: number, maxTokens?: number }",
-      "returns": "LLMConfig object with typed properties for LLM initialization"
+      "params": "Optional: { model: string, apiKey: string, endpoint: string, temperature?: number, maxTokens?: number }",
+      "returns": "A typed configuration object for LLM initialization",
+      "sideEffect": false,
+      "example": "const config: LLMConfig = { model: 'gpt-4', apiKey: 'your-key', endpoint: 'https://api.openai.com/v1' }"
     },
     "LLMPayload": {
       "type": "type",
-      "description": "Payload type for LLM requests, encapsulating the user message and optional context for AI model interactions. Used to structure input data sent to LLM endpoints for processing and response generation.",
+      "description": "Payload structure for sending requests to an LLM, containing the prompt, conversation context, and optional parameters. Use this to format data sent to the LLM service.",
       "hook": false,
-      "params": "{ message: string, context?: string[] }",
-      "returns": "LLMPayload object containing message and optional context array for LLM processing"
+      "params": "Optional: { prompt: string, messages?: Message[], temperature?: number, maxTokens?: number, stream?: boolean }",
+      "returns": "A typed payload object for LLM requests",
+      "sideEffect": false,
+      "example": "const payload: LLMPayload = { prompt: 'Translate to French:', messages: [{ role: 'user', content: 'Hello world' }] }"
     }
   },
   "hooks": [
