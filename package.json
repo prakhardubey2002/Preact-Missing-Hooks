@@ -82,6 +82,11 @@
       "import": "./dist/useWorkerNotifications.module.js",
       "require": "./dist/useWorkerNotifications.js"
     },
+    "./useRefPrint": {
+      "types": "./dist/useRefPrint.d.ts",
+      "import": "./dist/useRefPrint.module.js",
+      "require": "./dist/useRefPrint.js"
+    },
     "./react": {
       "types": "./dist/index.d.ts",
       "import": "./dist/react.module.js",

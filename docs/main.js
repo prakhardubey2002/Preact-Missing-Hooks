@@ -19,6 +19,7 @@ const {
   useWasmCompute,
   useWorkerNotifications,
   useLLMMetadata,
+  useRefPrint,
 } = await import(
   isLocal ? '../dist/index.module.js' : 'https://unpkg.com/preact-missing-hooks/dist/index.module.js'
 );
@@ -317,6 +318,29 @@ function DemoWorkerNotifications() {
   );
 }
 
+function DemoRefPrint() {
+  const printRef = useRef(null);
+  const { print } = useRefPrint(printRef, { documentTitle: 'Preact Missing Hooks — useRefPrint Demo', downloadAsPdf: true });
+  return h('div', {},
+    h('div', {
+      ref: printRef,
+      style: {
+        padding: '1rem',
+        background: 'var(--surface2)',
+        borderRadius: '6px',
+        marginBottom: '0.75rem',
+        border: '1px solid var(--border)',
+      },
+    }, [
+      h('strong', { style: { display: 'block', marginBottom: '0.5rem' } }, 'This section is printable'),
+      h('p', { style: { margin: 0, fontSize: '0.9rem', color: 'var(--text2)' } },
+        'Click "Print / Save as PDF" to open the native print dialog. You can print or choose "Save as PDF" as the destination.'
+      ),
+    ]),
+    h('button', { onClick: print }, 'Print / Save as PDF')
+  );
+}
+
 function DemoLLMMetadata() {
   const [route, setRoute] = useState('/');
   useLLMMetadata({
@@ -451,6 +475,13 @@ const HOOKS = [
     summary: 'Listens to worker messages (task_start/task_end/task_fail/queue_size); tracks running tasks, counts, event history, avg duration, throughput/s, queue size; progress gives default view of all active worker data.',
     code: `const stats = useWorkerNotifications(worker, { maxHistory: 100 });\n// stats.progress, stats.runningTasks, stats.throughputPerSecond, ...`,
     Live: DemoWorkerNotifications,
+  },
+  {
+    name: 'useRefPrint',
+    flow: 'ref + useRefPrint(ref, options?) → print() → native window.print() for that section',
+    summary: 'Binds a ref to a printable section and provides print() to open the native print dialog (user can save as PDF).',
+    code: `const printRef = useRef(null);\nconst { print } = useRefPrint(printRef, { documentTitle: 'My Doc', downloadAsPdf: true });\n// ... <div ref={printRef}>Content</div> ... <button onClick={print}>Print</button>`,
+    Live: DemoRefPrint,
   },
   {
     name: 'useLLMMetadata',
