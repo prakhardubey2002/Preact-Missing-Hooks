@@ -87,6 +87,11 @@
       "import": "./dist/useRefPrint.module.js",
       "require": "./dist/useRefPrint.js"
     },
+    "./useRBAC": {
+      "types": "./dist/useRBAC.d.ts",
+      "import": "./dist/useRBAC.module.js",
+      "require": "./dist/useRBAC.js"
+    },
     "./react": {
       "types": "./dist/index.d.ts",
       "import": "./dist/react.module.js",

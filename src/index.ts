@@ -13,3 +13,4 @@ export * from "./useWasmCompute";
 export * from "./useWorkerNotifications";
 export * from "./useLLMMetadata";
 export * from "./useRefPrint";
+export * from "./useRBAC";

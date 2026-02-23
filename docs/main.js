@@ -20,6 +20,7 @@ const {
   useWorkerNotifications,
   useLLMMetadata,
   useRefPrint,
+  useRBAC,
 } = await import(
   isLocal ? '../dist/index.module.js' : 'https://unpkg.com/preact-missing-hooks/dist/index.module.js'
 );
@@ -341,6 +342,89 @@ function DemoRefPrint() {
   );
 }
 
+const RBAC_STORAGE_KEY = 'demo-rbac-user';
+const RBAC_ROLE_DEFS = [
+  { role: 'admin', condition: (u) => u && u.role === 'admin' },
+  { role: 'editor', condition: (u) => u && (u.role === 'editor' || u.role === 'admin') },
+  { role: 'viewer', condition: (u) => u && (u.id != null || u.role === 'viewer') },
+];
+const RBAC_ROLE_CAPS = {
+  admin: ['*'],
+  editor: ['posts:edit', 'posts:create', 'posts:read', 'comments:edit'],
+  viewer: ['posts:read', 'comments:read'],
+};
+
+function DemoRBAC() {
+  const [storageType, setStorageType] = useState('localStorage');
+  const userSource = storageType === 'sessionStorage'
+    ? { type: 'sessionStorage', key: RBAC_STORAGE_KEY }
+    : { type: 'localStorage', key: RBAC_STORAGE_KEY };
+  const rbac = useRBAC({
+    userSource,
+    roleDefinitions: RBAC_ROLE_DEFS,
+    roleCapabilities: RBAC_ROLE_CAPS,
+  });
+
+  useEffect(() => {
+    rbac.refetch();
+  }, [storageType]);
+
+  const loginAs = (role) => {
+    const user = { id: Date.now(), role, email: role + '@demo.app' };
+    rbac.setUserInStorage(user, storageType, RBAC_STORAGE_KEY);
+  };
+  const logout = () => rbac.setUserInStorage(null, storageType, RBAC_STORAGE_KEY);
+
+  if (!rbac.isReady) return h('div', { class: 'status' }, 'Loading RBAC…');
+  if (rbac.error) return h('div', { style: { color: 'var(--red)' } }, rbac.error.message);
+
+  return h('div', { class: 'rbac-demo' },
+    h('div', { class: 'rbac-toolbar' },
+      h('span', { style: { marginRight: '0.5rem', fontSize: '0.85rem', color: 'var(--textMuted)' } }, 'Source:'),
+      h('button', {
+        class: storageType === 'localStorage' ? 'badge green' : '',
+        onClick: () => setStorageType('localStorage'),
+        style: { marginRight: '0.25rem' },
+      }, 'localStorage'),
+      h('button', {
+        class: storageType === 'sessionStorage' ? 'badge green' : '',
+        onClick: () => setStorageType('sessionStorage'),
+      }, 'sessionStorage'),
+    ),
+    h('div', { class: 'rbac-actions' },
+      h('button', { onClick: () => loginAs('admin') }, 'Login as Admin'),
+      h('button', { onClick: () => loginAs('editor') }, 'Login as Editor'),
+      h('button', { onClick: () => loginAs('viewer') }, 'Login as Viewer'),
+      h('button', { onClick: logout }, 'Logout'),
+    ),
+    h('div', { class: 'rbac-state' },
+      h('div', { class: 'rbac-state-row' },
+        h('strong', {}, 'User: '),
+        h('code', { style: { fontSize: '0.8rem', wordBreak: 'break-all' } },
+          rbac.user ? JSON.stringify(rbac.user) : '(none)'),
+      ),
+      h('div', { class: 'rbac-state-row' },
+        h('strong', {}, 'Roles: '),
+        h('span', {}, rbac.roles.length ? rbac.roles.join(', ') : '(none)'),
+      ),
+      h('div', { class: 'rbac-state-row' },
+        h('strong', {}, 'Capabilities: '),
+        h('span', {}, rbac.capabilities.length ? rbac.capabilities.join(', ') : '(none)'),
+      ),
+    ),
+    h('div', { class: 'rbac-conditional' },
+      h('div', { class: 'card-title', style: { marginBottom: '0.5rem' } }, 'Conditional UI (by capability)'),
+      rbac.can('posts:read') && h('span', { class: 'badge green', style: { marginRight: '0.35rem' } }, 'View posts'),
+      rbac.can('posts:edit') && h('span', { class: 'badge amber', style: { marginRight: '0.35rem' } }, 'Edit posts'),
+      rbac.can('posts:create') && h('span', { class: 'badge', style: { marginRight: '0.35rem', background: 'var(--accentDim)', color: 'var(--accent)' } }, 'Create posts'),
+      rbac.can('*') && h('span', { class: 'badge', style: { background: 'var(--red)', color: '#fff' } }, 'Full access (*)'),
+      (!rbac.roles.length && h('span', { style: { color: 'var(--textMuted)', fontSize: '0.85rem' } }, 'Log in to see capabilities')) || null,
+    ),
+    h('div', { style: { marginTop: '0.75rem', fontSize: '0.8rem', color: 'var(--textMuted)' } },
+      'Roles: admin → * | editor → posts/comments edit, create, read | viewer → read only. Switch storage to see session vs persistent auth.'),
+  );
+}
+
 function DemoLLMMetadata() {
   const [route, setRoute] = useState('/');
   useLLMMetadata({
@@ -482,6 +566,20 @@ const HOOKS = [
     summary: 'Binds a ref to a printable section and provides print() to open the native print dialog (user can save as PDF).',
     code: `const printRef = useRef(null);\nconst { print } = useRefPrint(printRef, { documentTitle: 'My Doc', downloadAsPdf: true });\n// ... <div ref={printRef}>Content</div> ... <button onClick={print}>Print</button>`,
     Live: DemoRefPrint,
+  },
+  {
+    name: 'useRBAC',
+    flow: 'userSource + roleDefinitions + roleCapabilities → user, roles, capabilities, hasRole, can(), setUserInStorage',
+    summary: 'Frontend-only role-based access control. Define roles with conditions, assign capabilities per role. Pluggable: localStorage, sessionStorage, API, or custom. Full flexibility for frontend-only or API-backed auth.',
+    code: `const { roles, can, hasRole, setUserInStorage } = useRBAC({
+  userSource: { type: 'localStorage', key: 'user' },
+  roleDefinitions: [
+    { role: 'admin', condition: (u) => u?.role === 'admin' },
+    { role: 'editor', condition: (u) => u?.role === 'editor' },
+  ],
+  roleCapabilities: { admin: ['*'], editor: ['posts:edit', 'posts:create'] },
+});\nif (can('posts:edit')) { ... }`,
+    Live: DemoRBAC,
   },
   {
     name: 'useLLMMetadata',
