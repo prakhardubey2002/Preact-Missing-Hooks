@@ -75,7 +75,9 @@ export function useRefPrint(
     }
 
     // Ensure print-only styles exist (once per document)
-    let styleEl = document.getElementById(PRINT_STYLE_ID) as HTMLStyleElement | null;
+    let styleEl = document.getElementById(
+      PRINT_STYLE_ID
+    ) as HTMLStyleElement | null;
     if (!styleEl) {
       styleEl = document.createElement("style");
       styleEl.id = PRINT_STYLE_ID;
