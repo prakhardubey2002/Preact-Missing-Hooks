@@ -64,9 +64,21 @@ export interface UseRBACReturn {
   /** Re-fetch user/roles/capabilities from source. */
   refetch: () => Promise<void>;
   /** Helpers to persist auth to storage (for frontend-only flows). */
-  setUserInStorage: (user: RBACUser | null, storage: "localStorage" | "sessionStorage", key: string) => void;
-  setRolesInStorage: (roles: string[], storage: "localStorage" | "sessionStorage", key: string) => void;
-  setCapabilitiesInStorage: (capabilities: string[], storage: "localStorage" | "sessionStorage", key: string) => void;
+  setUserInStorage: (
+    user: RBACUser | null,
+    storage: "localStorage" | "sessionStorage",
+    key: string
+  ) => void;
+  setRolesInStorage: (
+    roles: string[],
+    storage: "localStorage" | "sessionStorage",
+    key: string
+  ) => void;
+  setCapabilitiesInStorage: (
+    capabilities: string[],
+    storage: "localStorage" | "sessionStorage",
+    key: string
+  ) => void;
 }
 
 const WILDCARD = "*";
@@ -76,7 +88,8 @@ function parseUserFromStorage(
   key: string
 ): RBACUser | null {
   if (typeof window === "undefined") return null;
-  const storage = type === "localStorage" ? window.localStorage : window.sessionStorage;
+  const storage =
+    type === "localStorage" ? window.localStorage : window.sessionStorage;
   try {
     const raw = storage.getItem(key);
     if (raw == null) return null;
@@ -92,12 +105,15 @@ function parseCapabilitiesFromStorage(
   key: string
 ): string[] {
   if (typeof window === "undefined") return [];
-  const storage = type === "localStorage" ? window.localStorage : window.sessionStorage;
+  const storage =
+    type === "localStorage" ? window.localStorage : window.sessionStorage;
   try {
     const raw = storage.getItem(key);
     if (raw == null) return [];
     const data = JSON.parse(raw) as unknown;
-    return Array.isArray(data) ? data.filter((x): x is string => typeof x === "string") : [];
+    return Array.isArray(data)
+      ? data.filter((x): x is string => typeof x === "string")
+      : [];
   } catch {
     return [];
   }
@@ -126,7 +142,10 @@ function computeCapabilitiesFromRoles(
   return Array.from(set);
 }
 
-function hasCapabilityImpl(capabilities: string[], capability: string): boolean {
+function hasCapabilityImpl(
+  capabilities: string[],
+  capability: string
+): boolean {
   if (capabilities.includes(WILDCARD)) return true;
   return capabilities.includes(capability);
 }
@@ -168,7 +187,12 @@ export function useRBAC(options: UseRBACOptions): UseRBACReturn {
   const [error, setError] = useState<Error | null>(null);
 
   const resolveAuth = useCallback(async () => {
-    const { userSource: us, roleDefinitions: rdefs, roleCapabilities: rcaps, capabilitiesOverride: capOver } = optsRef.current;
+    const {
+      userSource: us,
+      roleDefinitions: rdefs,
+      roleCapabilities: rcaps,
+      capabilitiesOverride: capOver,
+    } = optsRef.current;
     setError(null);
     let resolvedUser: RBACUser | null = null;
     let resolvedRoles: string[] = [];
@@ -178,19 +202,31 @@ export function useRBAC(options: UseRBACOptions): UseRBACReturn {
       if (us.type === "localStorage") {
         resolvedUser = parseUserFromStorage("localStorage", us.key);
         resolvedRoles = computeRoles(resolvedUser, rdefs);
-        resolvedCapabilities = computeCapabilitiesFromRoles(resolvedRoles, rcaps);
+        resolvedCapabilities = computeCapabilitiesFromRoles(
+          resolvedRoles,
+          rcaps
+        );
       } else if (us.type === "sessionStorage") {
         resolvedUser = parseUserFromStorage("sessionStorage", us.key);
         resolvedRoles = computeRoles(resolvedUser, rdefs);
-        resolvedCapabilities = computeCapabilitiesFromRoles(resolvedRoles, rcaps);
+        resolvedCapabilities = computeCapabilitiesFromRoles(
+          resolvedRoles,
+          rcaps
+        );
       } else if (us.type === "api") {
         resolvedUser = await us.fetch();
         resolvedRoles = computeRoles(resolvedUser, rdefs);
-        resolvedCapabilities = computeCapabilitiesFromRoles(resolvedRoles, rcaps);
+        resolvedCapabilities = computeCapabilitiesFromRoles(
+          resolvedRoles,
+          rcaps
+        );
       } else if (us.type === "memory") {
         resolvedUser = us.getUser();
         resolvedRoles = computeRoles(resolvedUser, rdefs);
-        resolvedCapabilities = computeCapabilitiesFromRoles(resolvedRoles, rcaps);
+        resolvedCapabilities = computeCapabilitiesFromRoles(
+          resolvedRoles,
+          rcaps
+        );
       } else if (us.type === "custom") {
         const auth = await Promise.resolve(us.getAuth());
         resolvedUser = auth.user ?? null;
@@ -202,10 +238,16 @@ export function useRBAC(options: UseRBACOptions): UseRBACReturn {
 
       if (capOver) {
         if (capOver.type === "localStorage") {
-          const override = parseCapabilitiesFromStorage("localStorage", capOver.key);
+          const override = parseCapabilitiesFromStorage(
+            "localStorage",
+            capOver.key
+          );
           if (override.length > 0) resolvedCapabilities = override;
         } else if (capOver.type === "sessionStorage") {
-          const override = parseCapabilitiesFromStorage("sessionStorage", capOver.key);
+          const override = parseCapabilitiesFromStorage(
+            "sessionStorage",
+            capOver.key
+          );
           if (override.length > 0) resolvedCapabilities = override;
         } else if (capOver.type === "api") {
           const override = await capOver.fetch();
@@ -243,12 +285,15 @@ export function useRBAC(options: UseRBACOptions): UseRBACReturn {
     };
     window.addEventListener("storage", handler);
     return () => window.removeEventListener("storage", handler);
-  }, [userSource.type, userSource.type === "localStorage" || userSource.type === "sessionStorage" ? (userSource as { key: string }).key : "", resolveAuth]);
+  }, [
+    userSource.type,
+    userSource.type === "localStorage" || userSource.type === "sessionStorage"
+      ? (userSource as { key: string }).key
+      : "",
+    resolveAuth,
+  ]);
 
-  const hasRole = useCallback(
-    (role: string) => roles.includes(role),
-    [roles]
-  );
+  const hasRole = useCallback((role: string) => roles.includes(role), [roles]);
 
   const hasCapability = useCallback(
     (capability: string) => hasCapabilityImpl(capabilities, capability),
@@ -260,14 +305,25 @@ export function useRBAC(options: UseRBACOptions): UseRBACReturn {
   const refetch = useCallback(() => resolveAuth(), [resolveAuth]);
 
   const setUserInStorage = useCallback(
-    (newUser: RBACUser | null, storage: "localStorage" | "sessionStorage", key: string) => {
+    (
+      newUser: RBACUser | null,
+      storage: "localStorage" | "sessionStorage",
+      key: string
+    ) => {
       if (typeof window === "undefined") return;
-      const s = storage === "localStorage" ? window.localStorage : window.sessionStorage;
+      const s =
+        storage === "localStorage"
+          ? window.localStorage
+          : window.sessionStorage;
       if (newUser == null) s.removeItem(key);
       else s.setItem(key, JSON.stringify(newUser));
       if (
-        (userSource.type === "localStorage" && storage === "localStorage" && userSource.key === key) ||
-        (userSource.type === "sessionStorage" && storage === "sessionStorage" && userSource.key === key)
+        (userSource.type === "localStorage" &&
+          storage === "localStorage" &&
+          userSource.key === key) ||
+        (userSource.type === "sessionStorage" &&
+          storage === "sessionStorage" &&
+          userSource.key === key)
       ) {
         void resolveAuth();
       }
@@ -276,18 +332,32 @@ export function useRBAC(options: UseRBACOptions): UseRBACReturn {
   );
 
   const setRolesInStorage = useCallback(
-    (newRoles: string[], storage: "localStorage" | "sessionStorage", key: string) => {
+    (
+      newRoles: string[],
+      storage: "localStorage" | "sessionStorage",
+      key: string
+    ) => {
       if (typeof window === "undefined") return;
-      const s = storage === "localStorage" ? window.localStorage : window.sessionStorage;
+      const s =
+        storage === "localStorage"
+          ? window.localStorage
+          : window.sessionStorage;
       s.setItem(key, JSON.stringify(newRoles));
     },
     []
   );
 
   const setCapabilitiesInStorage = useCallback(
-    (newCaps: string[], storage: "localStorage" | "sessionStorage", key: string) => {
+    (
+      newCaps: string[],
+      storage: "localStorage" | "sessionStorage",
+      key: string
+    ) => {
       if (typeof window === "undefined") return;
-      const s = storage === "localStorage" ? window.localStorage : window.sessionStorage;
+      const s =
+        storage === "localStorage"
+          ? window.localStorage
+          : window.sessionStorage;
       s.setItem(key, JSON.stringify(newCaps));
     },
     []
