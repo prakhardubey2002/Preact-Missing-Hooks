@@ -35,6 +35,8 @@ A lightweight, extendable collection of React-like hooks for Preact, including u
 - **`useWasmCompute`** — Runs WebAssembly computation off the main thread via a Web Worker. Validates environment (browser, Worker, WebAssembly) and returns `compute(input)`, `result`, `loading`, `error`, `ready`.
 - **`useWorkerNotifications`** — Listens to a Worker's messages and maintains state: running tasks, completed/failed counts, event history, average task duration, throughput per second, and queue size. Worker posts `task_start` / `task_end` / `task_fail` / `queue_size`; returns `progress` (default view of all active worker data) plus individual stats.
 - **`useLLMMetadata`** — Injects an AI-readable metadata block into the document head on route change. Works in React 18+ and Preact 10+. Supports **manual** (title, description, tags) and **auto-extract** (from `document.title`, visible `h1`/`h2`, first 3 `p`). Cacheable, SSR-safe, no router dependency.
+- **`useRefPrint`** — Binds a ref to a printable section and provides `print()` to open the native print dialog. Uses `@media print` CSS so only that section is printed (or saved as PDF). Options: `documentTitle`, `downloadAsPdf`.
+- **`useRBAC`** — Frontend-only role-based access control. Define roles with conditions, assign capabilities per role. Pluggable user source: `localStorage`, `sessionStorage`, API, memory, or custom. Returns `user`, `roles`, `capabilities`, `hasRole(role)`, `can(capability)`, and storage helpers.
 - Fully TypeScript compatible
 - Bundled with Microbundle
 - Zero dependencies (peer: `preact` or `react` — use `/react` for React)
@@ -76,7 +78,7 @@ import { useThreadedWorker, useClipboard } from "preact-missing-hooks";
   import { useWorkerNotifications } from "preact-missing-hooks/useWorkerNotifications";
   ```
 
-  All hooks are available: `useTransition`, `useMutationObserver`, `useEventBus`, `useWrappedChildren`, `usePreferredTheme`, `useNetworkState`, `useClipboard`, `useRageClick`, `useThreadedWorker`, `useIndexedDB`, `useWebRTCIP`, `useWasmCompute`, `useWorkerNotifications`, `useLLMMetadata`.
+  All hooks are available: `useTransition`, `useMutationObserver`, `useEventBus`, `useWrappedChildren`, `usePreferredTheme`, `useNetworkState`, `useClipboard`, `useRageClick`, `useThreadedWorker`, `useIndexedDB`, `useWebRTCIP`, `useWasmCompute`, `useWorkerNotifications`, `useLLMMetadata`, `useRefPrint`, `useRBAC`.
 
 ---
 
@@ -131,22 +133,24 @@ Or open `docs/index.html` after building (see [docs/README.md](docs/README.md) f
 
 **Usage at a glance:**
 
-| Hook                                              | One-liner                                                                         |
-| ------------------------------------------------- | --------------------------------------------------------------------------------- |
-| [useTransition](#usetransition)                   | `const [startTransition, isPending] = useTransition();`                           |
-| [useMutationObserver](#usemutationobserver)       | `useMutationObserver(ref, callback, { childList: true });`                        |
-| [useEventBus](#useeventbus)                       | `const { emit, on } = useEventBus();`                                             |
-| [useWrappedChildren](#usewrappedchildren)         | `const wrapped = useWrappedChildren(children, { className: 'x' });`               |
-| [usePreferredTheme](#usepreferredtheme)           | `const theme = usePreferredTheme(); // 'light' \| 'dark' \| 'no-preference'`      |
-| [useNetworkState](#usenetworkstate)               | `const { online, effectiveType } = useNetworkState();`                            |
-| [useClipboard](#useclipboard)                     | `const { copy, paste, copied } = useClipboard();`                                 |
-| [useRageClick](#userageclick)                     | `useRageClick(ref, { onRageClick, threshold: 5 });`                               |
-| [useThreadedWorker](#usethreadedworker)           | `const { run, loading, result } = useThreadedWorker(fn, { mode: 'sequential' });` |
-| [useIndexedDB](#useindexeddb)                     | `const { db, isReady } = useIndexedDB({ name, version, tables });`                |
-| [useWebRTCIP](#usewebrtcip)                       | `const { ips, loading, error } = useWebRTCIP({ timeout: 3000 });`                 |
-| [useWasmCompute](#usewasmcompute)                 | `const { compute, result, ready } = useWasmCompute({ wasmUrl });`                 |
-| [useWorkerNotifications](#useworkernotifications) | `const { progress, eventHistory } = useWorkerNotifications(worker);`              |
-| [useLLMMetadata](#usellmmetadata)                 | `useLLMMetadata({ route: pathname, mode: 'auto-extract' });`                      |
+| Hook                                              | One-liner                                                                                     |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| [useTransition](#usetransition)                   | `const [startTransition, isPending] = useTransition();`                                       |
+| [useMutationObserver](#usemutationobserver)       | `useMutationObserver(ref, callback, { childList: true });`                                    |
+| [useEventBus](#useeventbus)                       | `const { emit, on } = useEventBus();`                                                         |
+| [useWrappedChildren](#usewrappedchildren)         | `const wrapped = useWrappedChildren(children, { className: 'x' });`                           |
+| [usePreferredTheme](#usepreferredtheme)           | `const theme = usePreferredTheme(); // 'light' \| 'dark' \| 'no-preference'`                  |
+| [useNetworkState](#usenetworkstate)               | `const { online, effectiveType } = useNetworkState();`                                        |
+| [useClipboard](#useclipboard)                     | `const { copy, paste, copied } = useClipboard();`                                             |
+| [useRageClick](#userageclick)                     | `useRageClick(ref, { onRageClick, threshold: 5 });`                                           |
+| [useThreadedWorker](#usethreadedworker)           | `const { run, loading, result } = useThreadedWorker(fn, { mode: 'sequential' });`             |
+| [useIndexedDB](#useindexeddb)                     | `const { db, isReady } = useIndexedDB({ name, version, tables });`                            |
+| [useWebRTCIP](#usewebrtcip)                       | `const { ips, loading, error } = useWebRTCIP({ timeout: 3000 });`                             |
+| [useWasmCompute](#usewasmcompute)                 | `const { compute, result, ready } = useWasmCompute({ wasmUrl });`                             |
+| [useWorkerNotifications](#useworkernotifications) | `const { progress, eventHistory } = useWorkerNotifications(worker);`                          |
+| [useLLMMetadata](#usellmmetadata)                 | `useLLMMetadata({ route: pathname, mode: 'auto-extract' });`                                  |
+| [useRefPrint](#userefprint)                       | `const { print } = useRefPrint(printRef, { documentTitle: 'Report' });`                       |
+| [useRBAC](#userbac)                               | `const { can, hasRole, roles } = useRBAC({ userSource, roleDefinitions, roleCapabilities });` |
 
 ---
 
@@ -683,6 +687,99 @@ function App() {
     tags: ["preact", "hooks"],
   });
   return <div>{/* your routes / children */}</div>;
+}
+```
+
+---
+
+### `useRefPrint`
+
+Binds a ref to a DOM section and provides `print()` to open the native print dialog. Uses `@media print` CSS so only that section is visible when printing (user can then print or choose “Save as PDF”). Options: `documentTitle` (title for the print document), `downloadAsPdf` (hint that the same flow supports saving as PDF).
+
+```tsx
+import { useRef } from "preact/hooks";
+import { useRefPrint } from "preact-missing-hooks";
+
+function Report() {
+  const printRef = useRef<HTMLDivElement>(null);
+  const { print } = useRefPrint(printRef, {
+    documentTitle: "Monthly Report",
+    downloadAsPdf: true,
+  });
+
+  return (
+    <div>
+      <div ref={printRef}>
+        <h1>Report content</h1>
+        <p>Only this section is printed when you click Print.</p>
+      </div>
+      <button onClick={print}>Print / Save as PDF</button>
+    </div>
+  );
+}
+```
+
+---
+
+### `useRBAC`
+
+Frontend-only role-based access control. Define roles with a condition (e.g. `user.role === 'admin'`), assign capabilities per role (use `'*'` for full access), and plug in where the current user comes from: `localStorage`, `sessionStorage`, API, memory, or a custom getter. Returns `user`, `roles`, `capabilities`, `hasRole(role)`, `can(capability)`, `refetch`, and helpers like `setUserInStorage` for persisting auth in storage.
+
+**User source types:** `localStorage`, `sessionStorage` (key to read user JSON), `api` (`fetch` returning user), `memory` (`getUser()`), `custom` (`getAuth()` returning `{ user?, roles?, capabilities? }`). Optional `capabilitiesOverride` can read capabilities from storage or API instead of deriving from roles.
+
+```tsx
+import { useRBAC } from "preact-missing-hooks";
+
+const roleDefinitions = [
+  { role: "admin", condition: (u) => u?.role === "admin" },
+  {
+    role: "editor",
+    condition: (u) => u?.role === "editor" || u?.role === "admin",
+  },
+  { role: "viewer", condition: (u) => !!u?.id },
+];
+const roleCapabilities = {
+  admin: ["*"],
+  editor: ["posts:edit", "posts:create", "posts:read"],
+  viewer: ["posts:read"],
+};
+
+function App() {
+  const { user, roles, capabilities, hasRole, can, setUserInStorage } = useRBAC(
+    {
+      userSource: { type: "localStorage", key: "user" },
+      roleDefinitions,
+      roleCapabilities,
+    }
+  );
+
+  const login = (role) => {
+    setUserInStorage(
+      { id: 1, role, email: role + "@app.com" },
+      "localStorage",
+      "user"
+    );
+  };
+  const logout = () => setUserInStorage(null, "localStorage", "user");
+
+  return (
+    <div>
+      {!user ? (
+        <div>
+          <button onClick={() => login("admin")}>Login as Admin</button>
+          <button onClick={() => login("editor")}>Login as Editor</button>
+          <button onClick={() => login("viewer")}>Login as Viewer</button>
+        </div>
+      ) : (
+        <div>
+          <p>Roles: {roles.join(", ")}</p>
+          {can("posts:edit") && <button>Edit post</button>}
+          {can("*") && <button>Admin panel</button>}
+          <button onClick={logout}>Logout</button>
+        </div>
+      )}
+    </div>
+  );
 }
 ```
 

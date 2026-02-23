@@ -48,6 +48,8 @@ Open `docs/index.html` in a browser that supports ES modules and import maps. Th
 | **useWebRTCIP**            | Detect IP via WebRTC (may take a few seconds).                                                                                                                                                        |
 | **useWasmCompute**         | Run WASM in a worker (needs `add.wasm` in docs).                                                                                                                                                      |
 | **useWorkerNotifications** | Run/fail tasks and queue updates; toasts show events.                                                                                                                                                 |
+| **useRefPrint**            | Bind a ref to a section and click “Print / Save as PDF”; only that section is printed via `@media print`.                                                                                             |
+| **useRBAC**                | Login as Admin / Editor / Viewer (localStorage or sessionStorage); see roles and capabilities; conditional UI by `can(...)`.                                                                          |
 | **useLLMMetadata**         | Change “route” with buttons; see injected script info in the Live panel and `<script data-llm="true">` in the document head. Safe with `null`/`undefined` config (minimal payload with `route: "/"`). |
 
 ---
@@ -86,6 +88,110 @@ function App() {
   const [startTransition, isPending] = useTransition();
   // ...
 }
+```
+
+### useRefPrint example
+
+Print only a specific section via the native print dialog (user can save as PDF):
+
+```js
+import { h, render } from "preact";
+import { useRef } from "preact/hooks";
+import { useRefPrint } from "preact-missing-hooks";
+
+function Report() {
+  const printRef = useRef(null);
+  const { print } = useRefPrint(printRef, {
+    documentTitle: "My Report",
+    downloadAsPdf: true,
+  });
+  return h(
+    "div",
+    {},
+    h(
+      "div",
+      { ref: printRef, style: { padding: "1rem", background: "#f5f5f5" } },
+      "Only this section is printed when you click the button."
+    ),
+    h("button", { onClick: print }, "Print / Save as PDF")
+  );
+}
+render(h(Report), document.getElementById("root"));
+```
+
+### useRBAC example
+
+Frontend-only role-based access: define roles with conditions, assign capabilities per role, and read the current user from localStorage (or sessionStorage / API):
+
+```js
+import { h, render } from "preact";
+import { useRBAC } from "preact-missing-hooks";
+
+const roleDefinitions = [
+  { role: "admin", condition: (u) => u && u.role === "admin" },
+  {
+    role: "editor",
+    condition: (u) => u && (u.role === "editor" || u.role === "admin"),
+  },
+  { role: "viewer", condition: (u) => u && u.id != null },
+];
+const roleCapabilities = {
+  admin: ["*"],
+  editor: ["posts:edit", "posts:create", "posts:read"],
+  viewer: ["posts:read"],
+};
+
+function App() {
+  const { user, roles, can, setUserInStorage } = useRBAC({
+    userSource: { type: "localStorage", key: "app-user" },
+    roleDefinitions,
+    roleCapabilities,
+  });
+
+  if (!user) {
+    return h(
+      "div",
+      {},
+      h(
+        "button",
+        {
+          onClick: () =>
+            setUserInStorage(
+              { id: 1, role: "admin" },
+              "localStorage",
+              "app-user"
+            ),
+        },
+        "Login as Admin"
+      ),
+      h(
+        "button",
+        {
+          onClick: () =>
+            setUserInStorage(
+              { id: 2, role: "viewer" },
+              "localStorage",
+              "app-user"
+            ),
+        },
+        "Login as Viewer"
+      )
+    );
+  }
+  return h(
+    "div",
+    {},
+    h("p", {}, "Roles: " + roles.join(", ")),
+    can("posts:edit") && h("button", {}, "Edit post"),
+    can("*") && h("button", {}, "Admin panel"),
+    h(
+      "button",
+      { onClick: () => setUserInStorage(null, "localStorage", "app-user") },
+      "Logout"
+    )
+  );
+}
+render(h(App), document.getElementById("root"));
 ```
 
 ### useLLMMetadata in the demo
