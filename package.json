@@ -105,7 +105,7 @@
   },
   "scripts": {
     "build": "microbundle --alias react=preact/compat && npm run build:react && node scripts/generate-entry.cjs",
-    "llm:generate": "hayagriva-llm generate",
+    "llm:generate": "hayagriva-llm generate --mode ai --include-src --verbose",
     "build:react": "rollup -c scripts/rollup.react.config.cjs",
     "dev": "microbundle watch",
     "prepublishOnly": "npm run build",

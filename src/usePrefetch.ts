@@ -69,23 +69,20 @@ export function usePrefetch(): UsePrefetchReturn {
   const prefetchedRef = useRef<Set<string>>(new Set());
   const [, setTick] = useState(0);
 
-  const prefetch = useCallback(
-    (url: string, options?: UsePrefetchOptions) => {
-      const trimmed = url?.trim();
-      if (!trimmed) return;
-      if (prefetchedRef.current.has(trimmed)) return;
+  const prefetch = useCallback((url: string, options?: UsePrefetchOptions) => {
+    const trimmed = url?.trim();
+    if (!trimmed) return;
+    if (prefetchedRef.current.has(trimmed)) return;
 
-      const as = options?.as ?? "document";
-      if (as === "document") {
-        prefetchDocument(trimmed);
-      } else {
-        prefetchFetch(trimmed);
-      }
-      prefetchedRef.current.add(trimmed);
-      setTick((n) => n + 1);
-    },
-    []
-  );
+    const as = options?.as ?? "document";
+    if (as === "document") {
+      prefetchDocument(trimmed);
+    } else {
+      prefetchFetch(trimmed);
+    }
+    prefetchedRef.current.add(trimmed);
+    setTick((n) => n + 1);
+  }, []);
 
   const isPrefetched = useCallback((url: string) => {
     return prefetchedRef.current.has(url?.trim() ?? "");
