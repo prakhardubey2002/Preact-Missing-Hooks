@@ -21,6 +21,7 @@ const {
   useLLMMetadata,
   useRefPrint,
   useRBAC,
+  usePrefetch,
 } = await import(
   isLocal ? '../dist/index.module.js' : 'https://unpkg.com/preact-missing-hooks/dist/index.module.js'
 );
@@ -81,6 +82,32 @@ function DemoNetworkState() {
   return h('div', { class: 'status' },
     state.online ? h('span', { class: 'badge green' }, 'Online') : h('span', { class: 'badge', style: { background: 'var(--red)', color: '#fff' } }, 'Offline'),
     state.effectiveType ? ' ' + state.effectiveType : ''
+  );
+}
+
+function DemoPrefetch() {
+  const { prefetch, isPrefetched } = usePrefetch();
+  const [lastUrl, setLastUrl] = useState('');
+  const demoUrl = 'https://example.com/prefetched-page';
+  const fetchUrl = 'https://httpbin.org/get';
+  const doPrefetchDoc = () => { prefetch(demoUrl); setLastUrl(demoUrl); };
+  const doPrefetchFetch = () => { prefetch(fetchUrl, { as: 'fetch' }); setLastUrl(fetchUrl); };
+  return h('div', {},
+    h('div', { style: { marginBottom: '0.5rem', fontSize: '0.85rem' } }, [
+      h('button', {
+        onClick: doPrefetchDoc,
+        onMouseEnter: doPrefetchDoc,
+      }, 'Prefetch document'),
+      ' ',
+      h('button', {
+        onClick: doPrefetchFetch,
+        onMouseEnter: doPrefetchFetch,
+      }, 'Prefetch (fetch)'),
+    ]),
+    lastUrl
+      ? h('span', { class: 'badge green', style: { marginLeft: '0.35rem' } },
+        'Prefetched: ' + lastUrl + (isPrefetched(lastUrl) ? ' ✓' : ''))
+      : h('span', { class: 'status' }, 'Hover or click to prefetch a URL (document or fetch).')
   );
 }
 
@@ -510,6 +537,13 @@ const HOOKS = [
     summary: 'Tracks online/offline and connection type (when the Network Information API is available).',
     code: `const state = useNetworkState();\n// state.online, state.effectiveType, ...`,
     Live: DemoNetworkState,
+  },
+  {
+    name: 'usePrefetch',
+    flow: 'Component → usePrefetch() → prefetch(url, options?) → link rel=prefetch or fetch()',
+    summary: 'Preload URLs (documents or data) so they are cached before navigation or use. Ideal for link hover or route preloading.',
+    code: `const { prefetch, isPrefetched } = usePrefetch();\n<a onMouseEnter={() => prefetch(href)} href={href}>Link</a>\n// or prefetch(url, { as: 'fetch' }) for API`,
+    Live: DemoPrefetch,
   },
   {
     name: 'useClipboard',

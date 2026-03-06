@@ -92,6 +92,11 @@
       "import": "./dist/useRBAC.module.js",
       "require": "./dist/useRBAC.js"
     },
+    "./usePrefetch": {
+      "types": "./dist/usePrefetch.d.ts",
+      "import": "./dist/usePrefetch.module.js",
+      "require": "./dist/usePrefetch.js"
+    },
     "./react": {
       "types": "./dist/index.d.ts",
       "import": "./dist/react.module.js",
@@ -144,6 +149,7 @@
     "usePreferredTheme",
     "useNetworkState",
     "useClipboard",
+    "usePrefetch",
     "useRageClick",
     "rage click",
     "sentry",
