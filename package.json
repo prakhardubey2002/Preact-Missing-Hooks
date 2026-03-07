@@ -97,6 +97,11 @@
       "import": "./dist/usePrefetch.module.js",
       "require": "./dist/usePrefetch.js"
     },
+    "./usePoll": {
+      "types": "./dist/usePoll.d.ts",
+      "import": "./dist/usePoll.module.js",
+      "require": "./dist/usePoll.js"
+    },
     "./react": {
       "types": "./dist/index.d.ts",
       "import": "./dist/react.module.js",
@@ -150,6 +155,7 @@
     "useNetworkState",
     "useClipboard",
     "usePrefetch",
+    "usePoll",
     "useRageClick",
     "rage click",
     "sentry",

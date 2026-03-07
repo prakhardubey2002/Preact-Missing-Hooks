@@ -22,6 +22,7 @@ const {
   useRefPrint,
   useRBAC,
   usePrefetch,
+  usePoll,
 } = await import(
   isLocal ? '../dist/index.module.js' : 'https://unpkg.com/preact-missing-hooks/dist/index.module.js'
 );
@@ -108,6 +109,29 @@ function DemoPrefetch() {
       ? h('span', { class: 'badge green', style: { marginLeft: '0.35rem' } },
         'Prefetched: ' + lastUrl + (isPrefetched(lastUrl) ? ' ✓' : ''))
       : h('span', { class: 'status' }, 'Hover or click to prefetch a URL (document or fetch).')
+  );
+}
+
+function DemoPoll() {
+  const countRef = { current: 0 };
+  const { data, done, error, pollCount, start, stop } = usePoll(
+    async () => {
+      countRef.current += 1;
+      if (countRef.current >= 3) return { done: true, data: { message: 'Ready after ' + countRef.current + ' polls' } };
+      return { done: false };
+    },
+    { intervalMs: 700, immediate: true }
+  );
+  return h('div', {},
+    h('div', { style: { marginBottom: '0.5rem', fontSize: '0.85rem' } }, [
+      h('button', { onClick: start }, 'Start'),
+      ' ',
+      h('button', { onClick: stop }, 'Stop'),
+    ]),
+    error ? h('span', { class: 'badge', style: { background: 'var(--red)', color: '#fff' } }, error.message) : null,
+    done
+      ? h('span', { class: 'badge green', style: { marginLeft: '0.35rem' } }, data?.message ?? 'Done')
+      : h('span', { class: 'status' }, 'Polling… (' + pollCount + ' calls)')
   );
 }
 
@@ -544,6 +568,13 @@ const HOOKS = [
     summary: 'Preload URLs (documents or data) so they are cached before navigation or use. Ideal for link hover or route preloading.',
     code: `const { prefetch, isPrefetched } = usePrefetch();\n<a onMouseEnter={() => prefetch(href)} href={href}>Link</a>\n// or prefetch(url, { as: 'fetch' }) for API`,
     Live: DemoPrefetch,
+  },
+  {
+    name: 'usePoll',
+    flow: 'Component → usePoll(pollFn, { intervalMs, immediate }) → poll until done: true → data, done, pollCount',
+    summary: 'Polls an async function at a fixed interval until it returns { done: true, data? }. Stops on error. Good for readiness checks or waiting on a backend job.',
+    code: `const { data, done, error, pollCount, stop } = usePoll(\n  async () => (await fetch('/api/status')).ok ? { done: true, data } : { done: false },\n  { intervalMs: 1000, immediate: true }\n);`,
+    Live: DemoPoll,
   },
   {
     name: 'useClipboard',

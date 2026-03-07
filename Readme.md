@@ -28,6 +28,7 @@ A lightweight, extendable collection of React-like hooks for Preact, including u
 - **`usePreferredTheme`** — Detects the user's preferred color scheme (light/dark) from system preferences.
 - **`useNetworkState`** — Tracks online/offline status and connection details (type, downlink, RTT, save-data).
 - **`usePrefetch`** — Preload URLs (documents or data) so they are cached before navigation or use. Ideal for link hover or route preloading. Returns `prefetch(url, options?)` and `isPrefetched(url)`.
+- **`usePoll`** — Polls an async function at a fixed interval until it returns `{ done: true, data? }`. Stops on error. Returns `data`, `done`, `error`, `pollCount`, `start`, `stop`. Good for readiness checks or waiting on a backend job.
 - **`useClipboard`** — Copy and paste text with the Clipboard API, with copied/error state.
 - **`useRageClick`** — Detects rage clicks (repeated rapid clicks in the same spot). Use with Sentry or similar to detect and fix rage-click issues and lower rage-click-related support.
 - **`useThreadedWorker`** — Run async work in a queue with **sequential** (single worker, priority-ordered) or **parallel** (worker pool) mode. Optional priority (1 = highest); FIFO within same priority.
@@ -75,12 +76,13 @@ import { useThreadedWorker, useClipboard } from "preact-missing-hooks";
   import { useThreadedWorker } from "preact-missing-hooks/useThreadedWorker";
   import { useClipboard } from "preact-missing-hooks/useClipboard";
   import { usePrefetch } from "preact-missing-hooks/usePrefetch";
+  import { usePoll } from "preact-missing-hooks/usePoll";
   import { useWebRTCIP } from "preact-missing-hooks/useWebRTCIP";
   import { useWasmCompute } from "preact-missing-hooks/useWasmCompute";
   import { useWorkerNotifications } from "preact-missing-hooks/useWorkerNotifications";
   ```
 
-  All hooks are available: `useTransition`, `useMutationObserver`, `useEventBus`, `useWrappedChildren`, `usePreferredTheme`, `useNetworkState`, `useClipboard`, `usePrefetch`, `useRageClick`, `useThreadedWorker`, `useIndexedDB`, `useWebRTCIP`, `useWasmCompute`, `useWorkerNotifications`, `useLLMMetadata`, `useRefPrint`, `useRBAC`.
+  All hooks are available: `useTransition`, `useMutationObserver`, `useEventBus`, `useWrappedChildren`, `usePreferredTheme`, `useNetworkState`, `useClipboard`, `usePrefetch`, `usePoll`, `useRageClick`, `useThreadedWorker`, `useIndexedDB`, `useWebRTCIP`, `useWasmCompute`, `useWorkerNotifications`, `useLLMMetadata`, `useRefPrint`, `useRBAC`.
 
 ---
 
@@ -144,6 +146,7 @@ Or open `docs/index.html` after building (see [docs/README.md](docs/README.md) f
 | [usePreferredTheme](#usepreferredtheme)           | `const theme = usePreferredTheme(); // 'light' \| 'dark' \| 'no-preference'`                  |
 | [useNetworkState](#usenetworkstate)               | `const { online, effectiveType } = useNetworkState();`                                        |
 | [usePrefetch](#useprefetch)                       | `const { prefetch, isPrefetched } = usePrefetch();`                                           |
+| [usePoll](#usepoll)                               | `const { data, done, pollCount, stop } = usePoll(pollFn, { intervalMs });`                    |
 | [useClipboard](#useclipboard)                     | `const { copy, paste, copied } = useClipboard();`                                             |
 | [useRageClick](#userageclick)                     | `useRageClick(ref, { onRageClick, threshold: 5 });`                                           |
 | [useThreadedWorker](#usethreadedworker)           | `const { run, loading, result } = useThreadedWorker(fn, { mode: 'sequential' });`             |
@@ -378,6 +381,35 @@ function DataLoader() {
   const { prefetch } = usePrefetch();
   prefetch("/api/user", { as: "fetch" });
   // ...
+}
+```
+
+---
+
+### `usePoll`
+
+Polls an async function at a fixed interval until it returns `{ done: true, data? }`. Stops on error. Options: `intervalMs`, `immediate`, `enabled`. Returns `data`, `done`, `error`, `pollCount`, `start`, `stop`.
+
+```tsx
+import { usePoll } from "preact-missing-hooks";
+
+function StatusPoller() {
+  const { data, done, error, pollCount, stop } = usePoll(
+    async () => {
+      const res = await fetch("/api/job/status");
+      const json = await res.json();
+      return json.ready ? { done: true, data: json } : { done: false };
+    },
+    { intervalMs: 1000, immediate: true }
+  );
+
+  if (error) return <div>Error: {error.message}</div>;
+  if (done) return <div>Result: {JSON.stringify(data)}</div>;
+  return (
+    <div>
+      Polling… ({pollCount} calls) <button onClick={stop}>Stop</button>
+    </div>
+  );
 }
 ```
 
