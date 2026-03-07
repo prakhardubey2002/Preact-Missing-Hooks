@@ -49,11 +49,7 @@ export function usePoll<T>(
   pollFn: () => Promise<{ done: boolean; data?: T }>,
   options: UsePollOptions = {}
 ): UsePollResult<T> {
-  const {
-    intervalMs = 1000,
-    immediate = true,
-    enabled = true,
-  } = options;
+  const { intervalMs = 1000, immediate = true, enabled = true } = options;
 
   const [data, setData] = useState<T | null>(null);
   const [done, setDone] = useState(false);
