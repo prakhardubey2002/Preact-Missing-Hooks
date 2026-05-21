@@ -212,9 +212,7 @@ async function readBattery(): Promise<DeviceBatteryInfo | undefined> {
  * }
  * ```
  */
-export function useDeviceData(
-  options: UseDeviceDataOptions = {},
-): DeviceData {
+export function useDeviceData(options: UseDeviceDataOptions = {}): DeviceData {
   const { includeBattery = true, batteryPollIntervalMs = 60_000 } = options;
 
   const [data, setData] = useState<DeviceData>(() => getDeviceData());
@@ -236,7 +234,7 @@ export function useDeviceData(
     window.addEventListener("offline", refresh);
 
     const reducedMotionMq = window.matchMedia?.(
-      "(prefers-reduced-motion: reduce)",
+      "(prefers-reduced-motion: reduce)"
     );
     const darkMq = window.matchMedia?.("(prefers-color-scheme: dark)");
     const lightMq = window.matchMedia?.("(prefers-color-scheme: light)");
@@ -271,7 +269,10 @@ export function useDeviceData(
 
     void updateBattery();
     if (batteryPollIntervalMs > 0) {
-      intervalId = setInterval(() => void updateBattery(), batteryPollIntervalMs);
+      intervalId = setInterval(
+        () => void updateBattery(),
+        batteryPollIntervalMs
+      );
     }
 
     return () => {
