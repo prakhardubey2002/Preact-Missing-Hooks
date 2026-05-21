@@ -29,12 +29,28 @@ export interface DeviceBatteryInfo {
   level: number;
 }
 
+/** Detected browser name and version */
+export interface DeviceBrowserInfo {
+  name: string;
+  version: string;
+}
+
+/** Detected operating system name and version */
+export interface DeviceOsInfo {
+  name: string;
+  version: string;
+}
+
 /** Snapshot of device / browser data from native Navigator and related APIs */
 export interface DeviceData {
   userAgent: string;
   language: string;
   languages: readonly string[];
   platform: string;
+  /** Detected browser (from Client Hints or user-agent parsing) */
+  browser: DeviceBrowserInfo;
+  /** Detected OS (from Client Hints or user-agent parsing) */
+  os: DeviceOsInfo;
   cookieEnabled: boolean;
   online: boolean;
   hardwareConcurrency?: number;
@@ -56,12 +72,23 @@ export interface UseDeviceDataOptions {
   includeBattery?: boolean;
   /** Battery refresh interval in ms (default: 60000) */
   batteryPollIntervalMs?: number;
+  /**
+   * Request high-entropy Client Hints (`platformVersion`, `fullVersionList`)
+   * when `navigator.userAgentData` supports it (default: true)
+   */
+  includeHighEntropy?: boolean;
 }
 
 interface NavigatorUAData {
   mobile?: boolean;
   platform?: string;
   brands?: Array<{ brand: string; version: string }>;
+  getHighEntropyValues?: (
+    hints: string[],
+  ) => Promise<{
+    platformVersion?: string;
+    fullVersionList?: Array<{ brand: string; version: string }>;
+  }>;
 }
 
 type NavigatorWithExtras = Navigator & {
@@ -69,11 +96,16 @@ type NavigatorWithExtras = Navigator & {
   userAgentData?: NavigatorUAData;
 };
 
+const UNKNOWN_BROWSER: DeviceBrowserInfo = { name: "Unknown", version: "" };
+const UNKNOWN_OS: DeviceOsInfo = { name: "Unknown", version: "" };
+
 const SSR_DEVICE_DATA: DeviceData = {
   userAgent: "",
   language: "en",
   languages: ["en"],
   platform: "",
+  browser: UNKNOWN_BROWSER,
+  os: UNKNOWN_OS,
   cookieEnabled: false,
   online: true,
   maxTouchPoints: 0,
@@ -91,6 +123,102 @@ const SSR_DEVICE_DATA: DeviceData = {
   reducedMotion: false,
   colorScheme: "no-preference",
 };
+
+const NOT_A_BRAND = /not.?a.?brand/i;
+
+/** Parse browser and OS from a user-agent string (sync fallback). */
+export function parseUserAgent(userAgent: string): {
+  browser: DeviceBrowserInfo;
+  os: DeviceOsInfo;
+} {
+  const browser: DeviceBrowserInfo = { ...UNKNOWN_BROWSER };
+  const os: DeviceOsInfo = { ...UNKNOWN_OS };
+
+  if (!userAgent) {
+    return { browser, os };
+  }
+
+  const win = userAgent.match(/Windows NT ([\d.]+)/);
+  if (win) {
+    os.name = "Windows";
+    os.version = win[1];
+  } else {
+    const mac = userAgent.match(/Mac OS X ([\d._]+)/);
+    if (mac) {
+      os.name = "macOS";
+      os.version = mac[1].replace(/_/g, ".");
+    } else {
+      const android = userAgent.match(/Android ([\d.]+)/);
+      if (android) {
+        os.name = "Android";
+        os.version = android[1];
+      } else {
+        const ios = userAgent.match(/(?:iPhone OS|CPU OS) ([\d_]+)/);
+        if (ios) {
+          os.name = "iOS";
+          os.version = ios[1].replace(/_/g, ".");
+        } else if (/Linux/.test(userAgent)) {
+          os.name = "Linux";
+          const linux = userAgent.match(/Linux ([\d.]+)/);
+          os.version = linux?.[1] ?? "";
+        }
+      }
+    }
+  }
+
+  const edg = userAgent.match(/Edg(?:A|iOS)?\/([\d.]+)/);
+  const opera = userAgent.match(/OPR\/([\d.]+)/);
+  const firefox = userAgent.match(/Firefox\/([\d.]+)/);
+  const safari =
+    /Version\/([\d.]+)/.test(userAgent) &&
+    /Safari/.test(userAgent) &&
+    !/Chrome|Chromium|Edg|OPR/.test(userAgent)
+      ? userAgent.match(/Version\/([\d.]+)/)
+      : null;
+  const chrome = userAgent.match(/Chrome\/([\d.]+)/);
+
+  if (edg) {
+    browser.name = "Edge";
+    browser.version = edg[1];
+  } else if (opera) {
+    browser.name = "Opera";
+    browser.version = opera[1];
+  } else if (firefox) {
+    browser.name = "Firefox";
+    browser.version = firefox[1];
+  } else if (safari) {
+    browser.name = "Safari";
+    browser.version = safari[1];
+  } else if (chrome) {
+    browser.name = "Chrome";
+    browser.version = chrome[1];
+  }
+
+  return { browser, os };
+}
+
+function pickBrowserBrand(
+  brands: Array<{ brand: string; version: string }>,
+): DeviceBrowserInfo {
+  const meaningful = brands.find((b) => !NOT_A_BRAND.test(b.brand));
+  const pick = meaningful ?? brands[0];
+  if (!pick) return { ...UNKNOWN_BROWSER };
+  return { name: pick.brand, version: pick.version };
+}
+
+function mergeBrowserOsFromUaData(
+  uaData: NavigatorUAData,
+  fallback: { browser: DeviceBrowserInfo; os: DeviceOsInfo },
+): { browser: DeviceBrowserInfo; os: DeviceOsInfo } {
+  const browser = uaData.brands?.length
+    ? pickBrowserBrand(uaData.brands)
+    : { ...fallback.browser };
+  const os: DeviceOsInfo = {
+    name: uaData.platform?.trim() || fallback.os.name,
+    version: fallback.os.version,
+  };
+  return { browser, os };
+}
 
 function getColorScheme(): DeviceData["colorScheme"] {
   if (typeof window === "undefined" || !window.matchMedia) {
@@ -124,11 +252,20 @@ export function getDeviceData(): DeviceData {
   const win =
     typeof globalThis.window !== "undefined" ? globalThis.window : null;
 
+  const ua = nav.userAgent ?? "";
+  const parsed = parseUserAgent(ua);
+  const uaData = nav.userAgentData;
+  const { browser, os } = uaData
+    ? mergeBrowserOsFromUaData(uaData, parsed)
+    : parsed;
+
   const data: DeviceData = {
-    userAgent: nav.userAgent ?? "",
+    userAgent: ua,
     language: nav.language ?? "",
     languages: nav.languages ? [...nav.languages] : [],
     platform: nav.platform ?? "",
+    browser,
+    os,
     cookieEnabled: Boolean(nav.cookieEnabled),
     online: Boolean(nav.onLine),
     maxTouchPoints: nav.maxTouchPoints ?? 0,
@@ -157,7 +294,6 @@ export function getDeviceData(): DeviceData {
     data.deviceMemory = nav.deviceMemory;
   }
 
-  const uaData = nav.userAgentData;
   if (uaData) {
     data.userAgentData = {
       mobile: Boolean(uaData.mobile),
@@ -167,6 +303,29 @@ export function getDeviceData(): DeviceData {
   }
 
   return data;
+}
+
+async function readHighEntropyBrowserOs(
+  uaData: NavigatorUAData,
+  current: { browser: DeviceBrowserInfo; os: DeviceOsInfo },
+): Promise<{ browser: DeviceBrowserInfo; os: DeviceOsInfo } | undefined> {
+  if (!uaData.getHighEntropyValues) return undefined;
+  try {
+    const hints = await uaData.getHighEntropyValues([
+      "platformVersion",
+      "fullVersionList",
+    ]);
+    const browser = hints.fullVersionList?.length
+      ? pickBrowserBrand(hints.fullVersionList)
+      : { ...current.browser };
+    const os: DeviceOsInfo = {
+      name: current.os.name,
+      version: hints.platformVersion?.trim() || current.os.version,
+    };
+    return { browser, os };
+  } catch {
+    return undefined;
+  }
 }
 
 async function readBattery(): Promise<DeviceBatteryInfo | undefined> {
@@ -203,24 +362,31 @@ async function readBattery(): Promise<DeviceBatteryInfo | undefined> {
  *   const device = useDeviceData();
  *   return (
  *     <dl>
+ *       <dt>Browser</dt><dd>{device.browser.name} {device.browser.version}</dd>
+ *       <dt>OS</dt><dd>{device.os.name} {device.os.version}</dd>
  *       <dt>Language</dt><dd>{device.language}</dd>
- *       <dt>CPUs</dt><dd>{device.hardwareConcurrency ?? '—'}</dd>
  *       <dt>Viewport</dt><dd>{device.viewport.width}×{device.viewport.height}</dd>
- *       <dt>Theme</dt><dd>{device.colorScheme}</dd>
  *     </dl>
  *   );
  * }
  * ```
  */
 export function useDeviceData(options: UseDeviceDataOptions = {}): DeviceData {
-  const { includeBattery = true, batteryPollIntervalMs = 60_000 } = options;
+  const {
+    includeBattery = true,
+    batteryPollIntervalMs = 60_000,
+    includeHighEntropy = true,
+  } = options;
 
   const [data, setData] = useState<DeviceData>(() => getDeviceData());
 
   const refresh = useCallback(() => {
     setData((prev) => {
       const next = getDeviceData();
-      return prev.battery ? { ...next, battery: prev.battery } : next;
+      return {
+        ...next,
+        ...(prev.battery ? { battery: prev.battery } : {}),
+      };
     });
   }, []);
 
@@ -254,6 +420,35 @@ export function useDeviceData(options: UseDeviceDataOptions = {}): DeviceData {
       lightMq?.removeEventListener?.("change", onMediaChange);
     };
   }, [refresh]);
+
+  useEffect(() => {
+    if (!includeHighEntropy || typeof navigator === "undefined") return;
+
+    const uaData = (navigator as NavigatorWithExtras).userAgentData;
+    if (!uaData?.getHighEntropyValues) return;
+
+    let cancelled = false;
+
+    const updateHighEntropy = async () => {
+      const base = getDeviceData();
+      const enriched = await readHighEntropyBrowserOs(uaData, {
+        browser: base.browser,
+        os: base.os,
+      });
+      if (cancelled || !enriched) return;
+      setData((prev) => ({
+        ...prev,
+        browser: enriched.browser,
+        os: enriched.os,
+      }));
+    };
+
+    void updateHighEntropy();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [includeHighEntropy]);
 
   useEffect(() => {
     if (!includeBattery || typeof navigator === "undefined") return;

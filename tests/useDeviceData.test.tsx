@@ -1,7 +1,46 @@
 /** @jsx h */
 import { h } from 'preact'
 import { render, waitFor } from '@testing-library/preact'
-import { getDeviceData, useDeviceData } from '../src/useDeviceData'
+import { getDeviceData, parseUserAgent, useDeviceData } from '../src/useDeviceData'
+
+const CHROME_WIN_UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+
+describe('parseUserAgent', () => {
+  it('parses Chrome on Windows', () => {
+    const parsed = parseUserAgent(CHROME_WIN_UA)
+    expect(parsed.browser).toEqual({ name: 'Chrome', version: '120.0.0.0' })
+    expect(parsed.os).toEqual({ name: 'Windows', version: '10.0' })
+  })
+
+  it('parses Firefox on macOS', () => {
+    const ua =
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:121.0) Gecko/20100101 Firefox/121.0'
+    const parsed = parseUserAgent(ua)
+    expect(parsed.browser.name).toBe('Firefox')
+    expect(parsed.browser.version).toBe('121.0')
+    expect(parsed.os.name).toBe('macOS')
+    expect(parsed.os.version).toBe('10.15')
+  })
+
+  it('parses Safari on iOS', () => {
+    const ua =
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1'
+    const parsed = parseUserAgent(ua)
+    expect(parsed.browser.name).toBe('Safari')
+    expect(parsed.browser.version).toBe('17.2')
+    expect(parsed.os.name).toBe('iOS')
+    expect(parsed.os.version).toBe('17.2')
+  })
+
+  it('parses Edge from user-agent', () => {
+    const ua =
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0'
+    const parsed = parseUserAgent(ua)
+    expect(parsed.browser.name).toBe('Edge')
+    expect(parsed.browser.version).toBe('120.0.0.0')
+  })
+})
 
 describe('getDeviceData', () => {
   const originalNavigator = global.navigator
@@ -25,14 +64,16 @@ describe('getDeviceData', () => {
     const data = getDeviceData()
     vi.unstubAllGlobals()
     expect(data.userAgent).toBe('')
+    expect(data.browser).toEqual({ name: 'Unknown', version: '' })
+    expect(data.os).toEqual({ name: 'Unknown', version: '' })
     expect(data.online).toBe(true)
     expect(data.viewport.width).toBe(0)
   })
 
-  it('reads navigator and screen fields', () => {
+  it('reads navigator, browser, OS, and screen fields', () => {
     Object.defineProperty(global, 'navigator', {
       value: {
-        userAgent: 'TestAgent/1.0',
+        userAgent: CHROME_WIN_UA,
         language: 'en-US',
         languages: ['en-US', 'en'],
         platform: 'Win32',
@@ -57,25 +98,31 @@ describe('getDeviceData', () => {
     })
 
     const data = getDeviceData()
-    expect(data.userAgent).toBe('TestAgent/1.0')
+    expect(data.userAgent).toBe(CHROME_WIN_UA)
+    expect(data.browser.name).toBe('Chrome')
+    expect(data.browser.version).toBe('120.0.0.0')
+    expect(data.os.name).toBe('Windows')
+    expect(data.os.version).toBe('10.0')
     expect(data.language).toBe('en-US')
-    expect(data.languages).toEqual(['en-US', 'en'])
     expect(data.platform).toBe('Win32')
     expect(data.hardwareConcurrency).toBe(8)
-    expect(data.deviceMemory).toBe(8)
     expect(data.screen.width).toBe(1920)
-    expect(data.screen.height).toBe(1080)
     expect(data.touch).toBe(false)
   })
 
-  it('includes userAgentData when navigator.userAgentData exists', () => {
+  it('prefers Client Hints brands over user-agent for browser name', () => {
     Object.defineProperty(global, 'navigator', {
       value: {
         ...originalNavigator,
+        userAgent:
+          'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120.0.0.0',
         userAgentData: {
           mobile: true,
           platform: 'Android',
-          brands: [{ brand: 'Chromium', version: '120' }],
+          brands: [
+            { brand: 'Not A Brand', version: '99' },
+            { brand: 'Google Chrome', version: '120.0.0.0' },
+          ],
         },
       },
       writable: true,
@@ -83,8 +130,9 @@ describe('getDeviceData', () => {
 
     const data = getDeviceData()
     expect(data.userAgentData?.mobile).toBe(true)
-    expect(data.userAgentData?.platform).toBe('Android')
-    expect(data.userAgentData?.brands[0]?.brand).toBe('Chromium')
+    expect(data.browser.name).toBe('Google Chrome')
+    expect(data.browser.version).toBe('120.0.0.0')
+    expect(data.os.name).toBe('Android')
   })
 })
 
@@ -102,37 +150,89 @@ describe('useDeviceData', () => {
     window.removeEventListener = originalRemoveEventListener
   })
 
-  it('returns device data from navigator', () => {
+  it('returns browser and OS from navigator user-agent', () => {
     Object.defineProperty(global, 'navigator', {
       value: {
         ...originalNavigator,
-        userAgent: 'HookTest/2.0',
+        userAgent: CHROME_WIN_UA,
         language: 'fr',
         languages: ['fr'],
-        platform: 'MacIntel',
+        platform: 'Win32',
         cookieEnabled: true,
         onLine: true,
-        maxTouchPoints: 5,
-        vendor: 'Apple',
+        maxTouchPoints: 0,
+        vendor: 'Google Inc.',
       },
       writable: true,
     })
 
     function TestComponent() {
-      const device = useDeviceData({ includeBattery: false })
+      const device = useDeviceData({
+        includeBattery: false,
+        includeHighEntropy: false,
+      })
       return (
         <div>
-          <span data-testid="ua">{device.userAgent}</span>
+          <span data-testid="browser">
+            {device.browser.name}:{device.browser.version}
+          </span>
+          <span data-testid="os">
+            {device.os.name}:{device.os.version}
+          </span>
           <span data-testid="lang">{device.language}</span>
-          <span data-testid="touch">{String(device.touch)}</span>
         </div>
       )
     }
 
     const { getByTestId } = render(<TestComponent />)
-    expect(getByTestId('ua').textContent).toBe('HookTest/2.0')
+    expect(getByTestId('browser').textContent).toBe('Chrome:120.0.0.0')
+    expect(getByTestId('os').textContent).toBe('Windows:10.0')
     expect(getByTestId('lang').textContent).toBe('fr')
-    expect(getByTestId('touch').textContent).toBe('true')
+  })
+
+  it('enriches browser and OS version from getHighEntropyValues', async () => {
+    Object.defineProperty(global, 'navigator', {
+      value: {
+        ...originalNavigator,
+        userAgent: CHROME_WIN_UA,
+        userAgentData: {
+          platform: 'Windows',
+          brands: [{ brand: 'Google Chrome', version: '120.0.0.0' }],
+          getHighEntropyValues: vi.fn().mockResolvedValue({
+            platformVersion: '15.0.0',
+            fullVersionList: [
+              { brand: 'Google Chrome', version: '120.0.6099.130' },
+            ],
+          }),
+        },
+      },
+      writable: true,
+    })
+
+    function TestComponent() {
+      const device = useDeviceData({
+        includeBattery: false,
+        includeHighEntropy: true,
+      })
+      return (
+        <div>
+          <span data-testid="browser">
+            {device.browser.name}:{device.browser.version}
+          </span>
+          <span data-testid="os">
+            {device.os.name}:{device.os.version}
+          </span>
+        </div>
+      )
+    }
+
+    const { getByTestId } = render(<TestComponent />)
+    await waitFor(() => {
+      expect(getByTestId('browser').textContent).toBe(
+        'Google Chrome:120.0.6099.130',
+      )
+      expect(getByTestId('os').textContent).toBe('Windows:15.0.0')
+    })
   })
 
   it('updates viewport on resize', async () => {
@@ -152,15 +252,16 @@ describe('useDeviceData', () => {
     })
 
     Object.defineProperty(global, 'navigator', {
-      value: { ...originalNavigator, onLine: true },
+      value: { ...originalNavigator, onLine: true, userAgent: CHROME_WIN_UA },
       writable: true,
     })
 
     function TestComponent() {
-      const device = useDeviceData({ includeBattery: false })
-      return (
-        <span data-testid="vw">{device.viewport.width}</span>
-      )
+      const device = useDeviceData({
+        includeBattery: false,
+        includeHighEntropy: false,
+      })
+      return <span data-testid="vw">{device.viewport.width}</span>
     }
 
     const { getByTestId } = render(<TestComponent />)
@@ -182,6 +283,7 @@ describe('useDeviceData', () => {
       value: {
         ...originalNavigator,
         onLine: true,
+        userAgent: CHROME_WIN_UA,
         getBattery: () =>
           Promise.resolve({ charging: true, level: 0.75 }),
       },
@@ -191,6 +293,7 @@ describe('useDeviceData', () => {
     function TestComponent() {
       const device = useDeviceData({
         includeBattery: true,
+        includeHighEntropy: false,
         batteryPollIntervalMs: 0,
       })
       return (

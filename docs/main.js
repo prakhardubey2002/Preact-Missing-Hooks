@@ -88,21 +88,39 @@ function DemoNetworkState() {
 }
 
 function DemoDeviceData() {
-  const device = useDeviceData({ includeBattery: false });
+  const device = useDeviceData({ includeBattery: true, includeHighEntropy: true });
+  const formatBrowser = () =>
+    device.browser.name + (device.browser.version ? ' ' + device.browser.version : '');
+  const formatOs = () =>
+    device.os.name + (device.os.version ? ' ' + device.os.version : '');
   const rows = [
+    ['Browser', formatBrowser()],
+    ['OS', formatOs()],
     ['Language', device.language],
-    ['Platform', device.platform || device.userAgentData?.platform || '—'],
+    ['Platform (navigator)', device.platform || '—'],
     ['CPUs', device.hardwareConcurrency != null ? String(device.hardwareConcurrency) : '—'],
     ['Memory (GB)', device.deviceMemory != null ? String(device.deviceMemory) : '—'],
     ['Viewport', device.viewport.width + '×' + device.viewport.height],
-    ['Screen', device.screen.width + '×' + device.screen.height],
+    ['Screen', device.screen.width + '×' + device.screen.height + ' @' + device.screen.pixelRatio + 'x'],
     ['Touch', device.touch ? 'yes' : 'no'],
     ['Color scheme', device.colorScheme],
     ['Reduced motion', device.reducedMotion ? 'yes' : 'no'],
     ['Online', device.online ? 'yes' : 'no'],
   ];
   if (device.userAgentData?.mobile) {
-    rows.push(['Mobile (UA-CH)', 'yes']);
+    rows.push(['Mobile (Client Hints)', 'yes']);
+  }
+  if (device.userAgentData?.brands?.length) {
+    rows.push([
+      'UA brands',
+      device.userAgentData.brands.map((b) => b.brand + '/' + b.version).join(', '),
+    ]);
+  }
+  if (device.battery) {
+    rows.push([
+      'Battery',
+      Math.round(device.battery.level * 100) + '%' + (device.battery.charging ? ' (charging)' : ''),
+    ]);
   }
   return h('div', { class: 'status', style: { fontSize: '0.85rem' } },
     rows.map(([label, value]) =>
@@ -592,9 +610,9 @@ const HOOKS = [
   },
   {
     name: 'useDeviceData',
-    flow: 'Component → useDeviceData() → Navigator + Screen + matchMedia (+ optional Battery API)',
-    summary: 'Extracts device/browser data: language, platform, CPUs, memory, screen, viewport, touch, color scheme, reduced motion, Client Hints, and optional battery.',
-    code: `const device = useDeviceData();\n// device.language, device.hardwareConcurrency, device.viewport, device.colorScheme`,
+    flow: 'Component → useDeviceData() → Client Hints + UA parse → browser/os → Screen + matchMedia (+ battery)',
+    summary: 'Device/browser snapshot: browser name & version, OS name & version (Client Hints + UA fallback), language, CPUs, memory, viewport, screen, touch, theme prefs, optional battery.',
+    code: `const device = useDeviceData({ includeHighEntropy: true });\n// device.browser.name, device.browser.version\n// device.os.name, device.os.version\n// device.viewport, device.colorScheme, device.battery`,
     Live: DemoDeviceData,
   },
   {

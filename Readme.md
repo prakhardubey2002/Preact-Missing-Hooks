@@ -29,7 +29,7 @@ A lightweight, extendable collection of React-like hooks for Preact, including u
 - **`useNetworkState`** — Tracks online/offline status and connection details (type, downlink, RTT, save-data).
 - **`usePrefetch`** — Preload URLs (documents or data) so they are cached before navigation or use. Ideal for link hover or route preloading. Returns `prefetch(url, options?)` and `isPrefetched(url)`.
 - **`usePoll`** — Polls an async function at a fixed interval until it returns `{ done: true, data? }`. Stops on error. Returns `data`, `done`, `error`, `pollCount`, `start`, `stop`. Good for readiness checks or waiting on a backend job.
-- **`useDeviceData`** — Extracts device and browser data from native Navigator, Screen, `window`, and `matchMedia` APIs (language, platform, CPUs, memory, screen/viewport size, touch, color scheme, reduced motion, Client Hints). Optionally polls the Battery Status API. Updates on resize, orientation, and preference changes.
+- **`useDeviceData`** — Extracts device and browser data from native Navigator, Screen, `window`, and `matchMedia` APIs (browser name/version, OS name/version, language, platform, CPUs, memory, screen/viewport size, touch, color scheme, reduced motion, Client Hints). Uses Client Hints high-entropy values when available. Optionally polls the Battery Status API. Updates on resize, orientation, and preference changes.
 - **`useClipboard`** — Copy and paste text with the Clipboard API, with copied/error state.
 - **`useRageClick`** — Detects rage clicks (repeated rapid clicks in the same spot). Use with Sentry or similar to detect and fix rage-click issues and lower rage-click-related support.
 - **`useThreadedWorker`** — Run async work in a queue with **sequential** (single worker, priority-ordered) or **parallel** (worker pool) mode. Optional priority (1 = highest); FIFO within same priority.
@@ -149,7 +149,7 @@ Or open `docs/index.html` after building (see [docs/README.md](docs/README.md) f
 | [useNetworkState](#usenetworkstate)               | `const { online, effectiveType } = useNetworkState();`                                        |
 | [usePrefetch](#useprefetch)                       | `const { prefetch, isPrefetched } = usePrefetch();`                                           |
 | [usePoll](#usepoll)                               | `const { data, done, pollCount, stop } = usePoll(pollFn, { intervalMs });`                    |
-| [useDeviceData](#usedevicedata)                   | `const device = useDeviceData();`                                                             |
+| [useDeviceData](#usedevicedata)                   | `const { browser, os } = useDeviceData();` — `browser.name`, `os.version`, viewport, etc.    |
 | [useClipboard](#useclipboard)                     | `const { copy, paste, copied } = useClipboard();`                                             |
 | [useRageClick](#userageclick)                     | `useRageClick(ref, { onRageClick, threshold: 5 });`                                           |
 | [useThreadedWorker](#usethreadedworker)           | `const { run, loading, result } = useThreadedWorker(fn, { mode: 'sequential' });`             |
@@ -326,6 +326,30 @@ function NetworkStatus() {
 
 ---
 
+### `useDeviceData`
+
+```tsx
+import { useDeviceData } from "preact-missing-hooks";
+
+function EnvironmentBadge() {
+  const { browser, os, viewport } = useDeviceData({
+    includeBattery: false,
+    includeHighEntropy: true,
+  });
+
+  return (
+    <span>
+      {browser.name} {browser.version} · {os.name} {os.version} ·{" "}
+      {viewport.width}×{viewport.height}
+    </span>
+  );
+}
+```
+
+See [full `useDeviceData` docs](#usedevicedata) for all fields, `getDeviceData()`, and `parseUserAgent()`.
+
+---
+
 ### `useClipboard`
 
 ```tsx
@@ -420,49 +444,79 @@ function StatusPoller() {
 
 ### `useDeviceData`
 
-Reads device and browser information from native APIs (`navigator`, `screen`, `window`, `matchMedia`). No permissions required for the base snapshot; battery uses the [Battery Status API](https://developer.mozilla.org/en-US/docs/Web/API/Battery_Status_API) when available.
+Reads device and browser information from native APIs (`navigator`, `screen`, `window`, `matchMedia`). Detects **browser** and **OS** name/version via [Client Hints](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/userAgentData) when supported, with user-agent parsing as fallback. High-entropy hints (`platformVersion`, `fullVersionList`) refine versions when the browser allows it.
 
-Options: `includeBattery` (default `true`), `batteryPollIntervalMs` (default `60000`). Returns a `DeviceData` object that updates on resize, orientation, online/offline, and `prefers-color-scheme` / `prefers-reduced-motion` changes.
+No permissions required for the base snapshot; battery uses the [Battery Status API](https://developer.mozilla.org/en-US/docs/Web/API/Battery_Status_API) when available.
+
+**Options**
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `includeBattery` | `true` | Poll `navigator.getBattery()` when available |
+| `batteryPollIntervalMs` | `60000` | Battery refresh interval (ms) |
+| `includeHighEntropy` | `true` | Request `platformVersion` / `fullVersionList` from Client Hints |
+
+**Key return fields**
+
+| Field | Description |
+| --- | --- |
+| `browser.name`, `browser.version` | Detected browser (e.g. Chrome, 120.0.0.0) |
+| `os.name`, `os.version` | Detected OS (e.g. Windows, 10.0) |
+| `language`, `languages` | Locale from `navigator` |
+| `screen`, `viewport` | Display and window size |
+| `hardwareConcurrency`, `deviceMemory` | CPU count, RAM hint (GB) |
+| `colorScheme`, `reducedMotion` | `prefers-color-scheme` / `prefers-reduced-motion` |
+| `userAgentData` | Raw Client Hints snapshot when available |
+| `battery` | Charging state and level (0–1) when enabled |
+
+Updates on resize, orientation, online/offline, and media preference changes.
 
 ```tsx
-import { useDeviceData } from "preact-missing-hooks";
+import { useDeviceData, getDeviceData, parseUserAgent } from "preact-missing-hooks";
 
 function DeviceInfo() {
-  const device = useDeviceData({ includeBattery: true });
+  const device = useDeviceData({
+    includeBattery: true,
+    includeHighEntropy: true,
+  });
 
   return (
-    <dl>
-      <dt>Language</dt>
-      <dd>{device.language}</dd>
-      <dt>CPUs</dt>
-      <dd>{device.hardwareConcurrency ?? "—"}</dd>
-      <dt>Viewport</dt>
-      <dd>
-        {device.viewport.width}×{device.viewport.height}
-      </dd>
-      <dt>Color scheme</dt>
-      <dd>{device.colorScheme}</dd>
-      {device.userAgentData && (
-        <>
-          <dt>Platform (Client Hints)</dt>
-          <dd>{device.userAgentData.platform}</dd>
-        </>
-      )}
-      {device.battery && (
-        <>
-          <dt>Battery</dt>
-          <dd>
-            {Math.round(device.battery.level * 100)}%
+    <section>
+      <h2>Environment</h2>
+      <p>
+        {device.browser.name} {device.browser.version} on {device.os.name}{" "}
+        {device.os.version}
+      </p>
+      <ul>
+        <li>Language: {device.language}</li>
+        <li>
+          Viewport: {device.viewport.width}×{device.viewport.height}
+        </li>
+        <li>CPUs: {device.hardwareConcurrency ?? "—"}</li>
+        <li>Theme: {device.colorScheme}</li>
+        {device.battery && (
+          <li>
+            Battery: {Math.round(device.battery.level * 100)}%
             {device.battery.charging ? " (charging)" : ""}
-          </dd>
-        </>
-      )}
-    </dl>
+          </li>
+        )}
+      </ul>
+    </section>
   );
 }
-```
 
-You can also call `getDeviceData()` outside React for a one-off snapshot (e.g. analytics on load).
+// One-off snapshot (e.g. analytics on page load)
+const snapshot = getDeviceData();
+sendAnalytics({
+  browser: snapshot.browser.name,
+  browserVersion: snapshot.browser.version,
+  os: snapshot.os.name,
+  osVersion: snapshot.os.version,
+});
+
+// Parse a custom UA string without the hook
+const { browser, os } = parseUserAgent(customUserAgent);
+```
 
 ---
 
