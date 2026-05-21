@@ -83,9 +83,7 @@ interface NavigatorUAData {
   mobile?: boolean;
   platform?: string;
   brands?: Array<{ brand: string; version: string }>;
-  getHighEntropyValues?: (
-    hints: string[],
-  ) => Promise<{
+  getHighEntropyValues?: (hints: string[]) => Promise<{
     platformVersion?: string;
     fullVersionList?: Array<{ brand: string; version: string }>;
   }>;
@@ -198,7 +196,7 @@ export function parseUserAgent(userAgent: string): {
 }
 
 function pickBrowserBrand(
-  brands: Array<{ brand: string; version: string }>,
+  brands: Array<{ brand: string; version: string }>
 ): DeviceBrowserInfo {
   const meaningful = brands.find((b) => !NOT_A_BRAND.test(b.brand));
   const pick = meaningful ?? brands[0];
@@ -208,7 +206,7 @@ function pickBrowserBrand(
 
 function mergeBrowserOsFromUaData(
   uaData: NavigatorUAData,
-  fallback: { browser: DeviceBrowserInfo; os: DeviceOsInfo },
+  fallback: { browser: DeviceBrowserInfo; os: DeviceOsInfo }
 ): { browser: DeviceBrowserInfo; os: DeviceOsInfo } {
   const browser = uaData.brands?.length
     ? pickBrowserBrand(uaData.brands)
@@ -307,7 +305,7 @@ export function getDeviceData(): DeviceData {
 
 async function readHighEntropyBrowserOs(
   uaData: NavigatorUAData,
-  current: { browser: DeviceBrowserInfo; os: DeviceOsInfo },
+  current: { browser: DeviceBrowserInfo; os: DeviceOsInfo }
 ): Promise<{ browser: DeviceBrowserInfo; os: DeviceOsInfo } | undefined> {
   if (!uaData.getHighEntropyValues) return undefined;
   try {
