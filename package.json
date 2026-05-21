@@ -102,6 +102,11 @@
       "import": "./dist/usePoll.module.js",
       "require": "./dist/usePoll.js"
     },
+    "./useDeviceData": {
+      "types": "./dist/useDeviceData.d.ts",
+      "import": "./dist/useDeviceData.module.js",
+      "require": "./dist/useDeviceData.js"
+    },
     "./react": {
       "types": "./dist/index.d.ts",
       "import": "./dist/react.module.js",
@@ -156,6 +161,7 @@
     "useClipboard",
     "usePrefetch",
     "usePoll",
+    "useDeviceData",
     "useRageClick",
     "rage click",
     "sentry",

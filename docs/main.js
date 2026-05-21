@@ -23,6 +23,7 @@ const {
   useRBAC,
   usePrefetch,
   usePoll,
+  useDeviceData,
 } = await import(
   isLocal ? '../dist/index.module.js' : 'https://unpkg.com/preact-missing-hooks/dist/index.module.js'
 );
@@ -83,6 +84,33 @@ function DemoNetworkState() {
   return h('div', { class: 'status' },
     state.online ? h('span', { class: 'badge green' }, 'Online') : h('span', { class: 'badge', style: { background: 'var(--red)', color: '#fff' } }, 'Offline'),
     state.effectiveType ? ' ' + state.effectiveType : ''
+  );
+}
+
+function DemoDeviceData() {
+  const device = useDeviceData({ includeBattery: false });
+  const rows = [
+    ['Language', device.language],
+    ['Platform', device.platform || device.userAgentData?.platform || '—'],
+    ['CPUs', device.hardwareConcurrency != null ? String(device.hardwareConcurrency) : '—'],
+    ['Memory (GB)', device.deviceMemory != null ? String(device.deviceMemory) : '—'],
+    ['Viewport', device.viewport.width + '×' + device.viewport.height],
+    ['Screen', device.screen.width + '×' + device.screen.height],
+    ['Touch', device.touch ? 'yes' : 'no'],
+    ['Color scheme', device.colorScheme],
+    ['Reduced motion', device.reducedMotion ? 'yes' : 'no'],
+    ['Online', device.online ? 'yes' : 'no'],
+  ];
+  if (device.userAgentData?.mobile) {
+    rows.push(['Mobile (UA-CH)', 'yes']);
+  }
+  return h('div', { class: 'status', style: { fontSize: '0.85rem' } },
+    rows.map(([label, value]) =>
+      h('div', { key: label, style: { marginBottom: '0.25rem' } },
+        h('strong', {}, label + ': '),
+        value
+      )
+    )
   );
 }
 
@@ -561,6 +589,13 @@ const HOOKS = [
     summary: 'Tracks online/offline and connection type (when the Network Information API is available).',
     code: `const state = useNetworkState();\n// state.online, state.effectiveType, ...`,
     Live: DemoNetworkState,
+  },
+  {
+    name: 'useDeviceData',
+    flow: 'Component → useDeviceData() → Navigator + Screen + matchMedia (+ optional Battery API)',
+    summary: 'Extracts device/browser data: language, platform, CPUs, memory, screen, viewport, touch, color scheme, reduced motion, Client Hints, and optional battery.',
+    code: `const device = useDeviceData();\n// device.language, device.hardwareConcurrency, device.viewport, device.colorScheme`,
+    Live: DemoDeviceData,
   },
   {
     name: 'usePrefetch',

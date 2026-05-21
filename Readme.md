@@ -29,6 +29,7 @@ A lightweight, extendable collection of React-like hooks for Preact, including u
 - **`useNetworkState`** — Tracks online/offline status and connection details (type, downlink, RTT, save-data).
 - **`usePrefetch`** — Preload URLs (documents or data) so they are cached before navigation or use. Ideal for link hover or route preloading. Returns `prefetch(url, options?)` and `isPrefetched(url)`.
 - **`usePoll`** — Polls an async function at a fixed interval until it returns `{ done: true, data? }`. Stops on error. Returns `data`, `done`, `error`, `pollCount`, `start`, `stop`. Good for readiness checks or waiting on a backend job.
+- **`useDeviceData`** — Extracts device and browser data from native Navigator, Screen, `window`, and `matchMedia` APIs (language, platform, CPUs, memory, screen/viewport size, touch, color scheme, reduced motion, Client Hints). Optionally polls the Battery Status API. Updates on resize, orientation, and preference changes.
 - **`useClipboard`** — Copy and paste text with the Clipboard API, with copied/error state.
 - **`useRageClick`** — Detects rage clicks (repeated rapid clicks in the same spot). Use with Sentry or similar to detect and fix rage-click issues and lower rage-click-related support.
 - **`useThreadedWorker`** — Run async work in a queue with **sequential** (single worker, priority-ordered) or **parallel** (worker pool) mode. Optional priority (1 = highest); FIFO within same priority.
@@ -77,12 +78,13 @@ import { useThreadedWorker, useClipboard } from "preact-missing-hooks";
   import { useClipboard } from "preact-missing-hooks/useClipboard";
   import { usePrefetch } from "preact-missing-hooks/usePrefetch";
   import { usePoll } from "preact-missing-hooks/usePoll";
+  import { useDeviceData } from "preact-missing-hooks/useDeviceData";
   import { useWebRTCIP } from "preact-missing-hooks/useWebRTCIP";
   import { useWasmCompute } from "preact-missing-hooks/useWasmCompute";
   import { useWorkerNotifications } from "preact-missing-hooks/useWorkerNotifications";
   ```
 
-  All hooks are available: `useTransition`, `useMutationObserver`, `useEventBus`, `useWrappedChildren`, `usePreferredTheme`, `useNetworkState`, `useClipboard`, `usePrefetch`, `usePoll`, `useRageClick`, `useThreadedWorker`, `useIndexedDB`, `useWebRTCIP`, `useWasmCompute`, `useWorkerNotifications`, `useLLMMetadata`, `useRefPrint`, `useRBAC`.
+  All hooks are available: `useTransition`, `useMutationObserver`, `useEventBus`, `useWrappedChildren`, `usePreferredTheme`, `useNetworkState`, `useClipboard`, `usePrefetch`, `usePoll`, `useDeviceData`, `useRageClick`, `useThreadedWorker`, `useIndexedDB`, `useWebRTCIP`, `useWasmCompute`, `useWorkerNotifications`, `useLLMMetadata`, `useRefPrint`, `useRBAC`.
 
 ---
 
@@ -147,6 +149,7 @@ Or open `docs/index.html` after building (see [docs/README.md](docs/README.md) f
 | [useNetworkState](#usenetworkstate)               | `const { online, effectiveType } = useNetworkState();`                                        |
 | [usePrefetch](#useprefetch)                       | `const { prefetch, isPrefetched } = usePrefetch();`                                           |
 | [usePoll](#usepoll)                               | `const { data, done, pollCount, stop } = usePoll(pollFn, { intervalMs });`                    |
+| [useDeviceData](#usedevicedata)                   | `const device = useDeviceData();`                                                             |
 | [useClipboard](#useclipboard)                     | `const { copy, paste, copied } = useClipboard();`                                             |
 | [useRageClick](#userageclick)                     | `useRageClick(ref, { onRageClick, threshold: 5 });`                                           |
 | [useThreadedWorker](#usethreadedworker)           | `const { run, loading, result } = useThreadedWorker(fn, { mode: 'sequential' });`             |
@@ -412,6 +415,54 @@ function StatusPoller() {
   );
 }
 ```
+
+---
+
+### `useDeviceData`
+
+Reads device and browser information from native APIs (`navigator`, `screen`, `window`, `matchMedia`). No permissions required for the base snapshot; battery uses the [Battery Status API](https://developer.mozilla.org/en-US/docs/Web/API/Battery_Status_API) when available.
+
+Options: `includeBattery` (default `true`), `batteryPollIntervalMs` (default `60000`). Returns a `DeviceData` object that updates on resize, orientation, online/offline, and `prefers-color-scheme` / `prefers-reduced-motion` changes.
+
+```tsx
+import { useDeviceData } from "preact-missing-hooks";
+
+function DeviceInfo() {
+  const device = useDeviceData({ includeBattery: true });
+
+  return (
+    <dl>
+      <dt>Language</dt>
+      <dd>{device.language}</dd>
+      <dt>CPUs</dt>
+      <dd>{device.hardwareConcurrency ?? "—"}</dd>
+      <dt>Viewport</dt>
+      <dd>
+        {device.viewport.width}×{device.viewport.height}
+      </dd>
+      <dt>Color scheme</dt>
+      <dd>{device.colorScheme}</dd>
+      {device.userAgentData && (
+        <>
+          <dt>Platform (Client Hints)</dt>
+          <dd>{device.userAgentData.platform}</dd>
+        </>
+      )}
+      {device.battery && (
+        <>
+          <dt>Battery</dt>
+          <dd>
+            {Math.round(device.battery.level * 100)}%
+            {device.battery.charging ? " (charging)" : ""}
+          </dd>
+        </>
+      )}
+    </dl>
+  );
+}
+```
+
+You can also call `getDeviceData()` outside React for a one-off snapshot (e.g. analytics on load).
 
 ---
 

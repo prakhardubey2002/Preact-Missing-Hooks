@@ -16,3 +16,4 @@ export * from "./useRefPrint";
 export * from "./useRBAC";
 export * from "./usePrefetch";
 export * from "./usePoll";
+export * from "./useDeviceData";
