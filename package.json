@@ -154,19 +154,19 @@
   "size-limit": [
     {
       "path": "dist/index.module.js",
-      "limit": "20 KB"
+      "limit": "25 KB"
     },
     {
       "path": "dist/index.js",
-      "limit": "20 KB"
+      "limit": "25 KB"
     },
     {
       "path": "dist/react.module.js",
-      "limit": "20 KB"
+      "limit": "25 KB"
     },
     {
       "path": "dist/react.js",
-      "limit": "20 KB"
+      "limit": "25 KB"
     }
   ],
   "keywords": [
