@@ -107,6 +107,26 @@
       "import": "./dist/useDeviceData.module.js",
       "require": "./dist/useDeviceData.js"
     },
+    "./useDebounce": {
+      "types": "./dist/useDebounce.d.ts",
+      "import": "./dist/useDebounce.module.js",
+      "require": "./dist/useDebounce.js"
+    },
+    "./useIdle": {
+      "types": "./dist/useIdle.d.ts",
+      "import": "./dist/useIdle.module.js",
+      "require": "./dist/useIdle.js"
+    },
+    "./useClickOutside": {
+      "types": "./dist/useClickOutside.d.ts",
+      "import": "./dist/useClickOutside.module.js",
+      "require": "./dist/useClickOutside.js"
+    },
+    "./useMediaQuery": {
+      "types": "./dist/useMediaQuery.d.ts",
+      "import": "./dist/useMediaQuery.module.js",
+      "require": "./dist/useMediaQuery.js"
+    },
     "./react": {
       "types": "./dist/index.d.ts",
       "import": "./dist/react.module.js",
@@ -162,7 +182,15 @@
     "usePrefetch",
     "usePoll",
     "useDeviceData",
+    "useDebounce",
+    "useIdle",
+    "useClickOutside",
+    "useMediaQuery",
     "useRageClick",
+    "debounce",
+    "idle",
+    "click-outside",
+    "media-query",
     "rage click",
     "sentry",
     "react-hooks",

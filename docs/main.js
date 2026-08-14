@@ -24,6 +24,10 @@ const {
   usePrefetch,
   usePoll,
   useDeviceData,
+  useDebounce,
+  useIdle,
+  useClickOutside,
+  useMediaQuery,
 } = await import(
   isLocal ? '../dist/index.module.js' : 'https://unpkg.com/preact-missing-hooks/dist/index.module.js'
 );
@@ -563,6 +567,82 @@ function DemoLLMMetadata() {
   );
 }
 
+function DemoDebounce() {
+  const [text, setText] = useState('');
+  const debounced = useDebounce(text, 400);
+  const [calls, setCalls] = useState(0);
+  const log = useDebounce(() => setCalls((n) => n + 1), 400);
+  return h('div', {},
+    h('input', {
+      value: text,
+      placeholder: 'Type to debounce…',
+      onInput: (e) => { setText(e.currentTarget.value); log(); },
+      style: {
+        padding: '0.4rem 0.6rem',
+        borderRadius: '6px',
+        border: '1px solid var(--border)',
+        background: 'var(--surface2)',
+        color: 'var(--text)',
+        width: '100%',
+        maxWidth: '16rem',
+      },
+    }),
+    h('div', { class: 'status', style: { marginTop: '0.5rem' } },
+      'Live: ' + (text || '—') + ' · Debounced: ' + (debounced || '—')
+    ),
+    h('div', { class: 'status' }, 'Debounced fn calls: ' + calls)
+  );
+}
+
+function DemoIdle() {
+  const { idle, lastActive, reset } = useIdle(3000);
+  return h('div', {},
+    idle
+      ? h('span', { class: 'badge amber' }, 'Idle')
+      : h('span', { class: 'badge green' }, 'Active'),
+    h('span', { style: { marginLeft: '0.5rem', fontSize: '0.85rem' } },
+      'Last active: ' + new Date(lastActive).toLocaleTimeString()
+    ),
+    ' ',
+    h('button', { onClick: reset, style: { marginLeft: '0.35rem' } }, 'Reset')
+  );
+}
+
+function DemoClickOutside() {
+  const ref = useRef(null);
+  const [open, setOpen] = useState(true);
+  useClickOutside(ref, () => setOpen(false));
+  return h('div', {},
+    open
+      ? h('div', {
+          ref,
+          style: {
+            padding: '0.75rem',
+            background: 'var(--surface2)',
+            borderRadius: '6px',
+            border: '1px solid var(--accent)',
+            display: 'inline-block',
+          },
+        }, 'Click outside this box to close it.')
+      : h('button', { onClick: () => setOpen(true) }, 'Open box')
+  );
+}
+
+function DemoMediaQuery() {
+  const isNarrow = useMediaQuery('(max-width: 768px)');
+  const prefersDark = useMediaQuery('(prefers-color-scheme: dark)');
+  return h('div', { class: 'status' },
+    h('div', { style: { marginBottom: '0.25rem' } },
+      'max-width 768px: ',
+      h('span', { class: 'badge ' + (isNarrow ? 'green' : 'amber') }, isNarrow ? 'match' : 'no match')
+    ),
+    h('div', {},
+      'prefers-color-scheme: dark: ',
+      h('span', { class: 'badge ' + (prefersDark ? 'green' : 'amber') }, prefersDark ? 'match' : 'no match')
+    )
+  );
+}
+
 // ——— Page data: heading, flow, summary, code, LiveComponent ———
 
 const HOOKS = [
@@ -602,6 +682,13 @@ const HOOKS = [
     Live: DemoPreferredTheme,
   },
   {
+    name: 'useMediaQuery',
+    flow: 'Component → useMediaQuery(query) → matchMedia(query) → boolean',
+    summary: 'Tracks whether a CSS media query currently matches the browser environment.',
+    code: `const isMobile = useMediaQuery('(max-width: 768px)');`,
+    Live: DemoMediaQuery,
+  },
+  {
     name: 'useNetworkState',
     flow: 'Component → useNetworkState() → online + connection (effectiveType, etc.)',
     summary: 'Tracks online/offline and connection type (when the Network Information API is available).',
@@ -630,6 +717,20 @@ const HOOKS = [
     Live: DemoPoll,
   },
   {
+    name: 'useDebounce',
+    flow: 'Component → useDebounce(value | fn, delay) → debounced value or delayed function call',
+    summary: 'Delays updating a value or executing a function until a specified time has passed without further changes.',
+    code: `const debounced = useDebounce(query, 300);\nconst save = useDebounce((text) => api.save(text), 400);`,
+    Live: DemoDebounce,
+  },
+  {
+    name: 'useIdle',
+    flow: 'Component → useIdle(timeout) → window events → idle after inactivity',
+    summary: 'Detects when a user has been inactive for a specified period of time.',
+    code: `const { idle, lastActive, reset } = useIdle(5000);`,
+    Live: DemoIdle,
+  },
+  {
     name: 'useClipboard',
     flow: 'Component → useClipboard() → copy(text) / paste() → Clipboard API',
     summary: 'Copy and paste text with the Clipboard API; returns copied and error state.',
@@ -642,6 +743,13 @@ const HOOKS = [
     summary: 'Detects rage clicks (e.g. for Sentry) when the user clicks repeatedly in the same area.',
     code: `useRageClick(ref, { onRageClick: (p) => report(p.count), threshold: 5 });`,
     Live: DemoRageClick,
+  },
+  {
+    name: 'useClickOutside',
+    flow: 'ref + useClickOutside(ref, handler) → pointer event outside element → handler',
+    summary: 'Detects clicks outside a specified element, useful for closing dropdowns, modals, and popovers.',
+    code: `useClickOutside(ref, () => setOpen(false));`,
+    Live: DemoClickOutside,
   },
   {
     name: 'useThreadedWorker',

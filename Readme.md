@@ -15,7 +15,7 @@
 
 If this package helps you, please consider dropping a star on the [GitHub repo](https://github.com/prakhardubey2002/Preact-Missing-Hooks).
 
-A lightweight, extendable collection of React-like hooks for Preact, including utilities for transitions, DOM mutation observation, global event buses, theme detection, network status, clipboard access, rage-click detection (e.g. for Sentry), a priority task queue (sequential or parallel), a production-ready **IndexedDB** hook with tables, transactions, and a full CRUD API, and **WebRTC-based IP detection** (`useWebRTCIP`) for frontend-only IP hints.
+A lightweight, extendable collection of React-like hooks for Preact, including utilities for transitions, DOM mutation observation, global event buses, theme detection, network status, clipboard access, debounce, idle detection, click-outside, media queries, rage-click detection (e.g. for Sentry), a priority task queue (sequential or parallel), a production-ready **IndexedDB** hook with tables, transactions, and a full CRUD API, and **WebRTC-based IP detection** (`useWebRTCIP`) for frontend-only IP hints.
 
 ---
 
@@ -30,6 +30,10 @@ A lightweight, extendable collection of React-like hooks for Preact, including u
 - **`usePrefetch`** — Preload URLs (documents or data) so they are cached before navigation or use. Ideal for link hover or route preloading. Returns `prefetch(url, options?)` and `isPrefetched(url)`.
 - **`usePoll`** — Polls an async function at a fixed interval until it returns `{ done: true, data? }`. Stops on error. Returns `data`, `done`, `error`, `pollCount`, `start`, `stop`. Good for readiness checks or waiting on a backend job.
 - **`useDeviceData`** — Extracts device and browser data from native Navigator, Screen, `window`, and `matchMedia` APIs (browser name/version, OS name/version, language, platform, CPUs, memory, screen/viewport size, touch, color scheme, reduced motion, Client Hints). Uses Client Hints high-entropy values when available. Optionally polls the Battery Status API. Updates on resize, orientation, and preference changes.
+- **`useDebounce`** — Delays updating a value or executing a function until a specified time has passed without further changes. Returns the debounced value, or a debounced function with `cancel()` / `flush()`.
+- **`useIdle`** — Detects when a user has been inactive for a specified period of time. Returns `idle`, `lastActive`, and `reset()`.
+- **`useClickOutside`** — Detects clicks outside a specified element, useful for closing dropdowns, modals, and popovers.
+- **`useMediaQuery`** — Tracks whether a CSS media query currently matches the browser environment.
 - **`useClipboard`** — Copy and paste text with the Clipboard API, with copied/error state.
 - **`useRageClick`** — Detects rage clicks (repeated rapid clicks in the same spot). Use with Sentry or similar to detect and fix rage-click issues and lower rage-click-related support.
 - **`useThreadedWorker`** — Run async work in a queue with **sequential** (single worker, priority-ordered) or **parallel** (worker pool) mode. Optional priority (1 = highest); FIFO within same priority.
@@ -79,12 +83,16 @@ import { useThreadedWorker, useClipboard } from "preact-missing-hooks";
   import { usePrefetch } from "preact-missing-hooks/usePrefetch";
   import { usePoll } from "preact-missing-hooks/usePoll";
   import { useDeviceData } from "preact-missing-hooks/useDeviceData";
+  import { useDebounce } from "preact-missing-hooks/useDebounce";
+  import { useIdle } from "preact-missing-hooks/useIdle";
+  import { useClickOutside } from "preact-missing-hooks/useClickOutside";
+  import { useMediaQuery } from "preact-missing-hooks/useMediaQuery";
   import { useWebRTCIP } from "preact-missing-hooks/useWebRTCIP";
   import { useWasmCompute } from "preact-missing-hooks/useWasmCompute";
   import { useWorkerNotifications } from "preact-missing-hooks/useWorkerNotifications";
   ```
 
-  All hooks are available: `useTransition`, `useMutationObserver`, `useEventBus`, `useWrappedChildren`, `usePreferredTheme`, `useNetworkState`, `useClipboard`, `usePrefetch`, `usePoll`, `useDeviceData`, `useRageClick`, `useThreadedWorker`, `useIndexedDB`, `useWebRTCIP`, `useWasmCompute`, `useWorkerNotifications`, `useLLMMetadata`, `useRefPrint`, `useRBAC`.
+  All hooks are available: `useTransition`, `useMutationObserver`, `useEventBus`, `useWrappedChildren`, `usePreferredTheme`, `useNetworkState`, `useClipboard`, `usePrefetch`, `usePoll`, `useDeviceData`, `useDebounce`, `useIdle`, `useClickOutside`, `useMediaQuery`, `useRageClick`, `useThreadedWorker`, `useIndexedDB`, `useWebRTCIP`, `useWasmCompute`, `useWorkerNotifications`, `useLLMMetadata`, `useRefPrint`, `useRBAC`.
 
 ---
 
@@ -150,6 +158,10 @@ Or open `docs/index.html` after building (see [docs/README.md](docs/README.md) f
 | [usePrefetch](#useprefetch)                       | `const { prefetch, isPrefetched } = usePrefetch();`                                           |
 | [usePoll](#usepoll)                               | `const { data, done, pollCount, stop } = usePoll(pollFn, { intervalMs });`                    |
 | [useDeviceData](#usedevicedata)                   | `const { browser, os } = useDeviceData();` — `browser.name`, `os.version`, viewport, etc.    |
+| [useDebounce](#usedebounce)                       | `const debounced = useDebounce(value, 300);` / `const save = useDebounce(fn, 300);`           |
+| [useIdle](#useidle)                               | `const { idle, lastActive, reset } = useIdle(5000);`                                          |
+| [useClickOutside](#useclickoutside)               | `useClickOutside(ref, () => setOpen(false));`                                                 |
+| [useMediaQuery](#usemediaquery)                   | `const isMobile = useMediaQuery("(max-width: 768px)");`                                       |
 | [useClipboard](#useclipboard)                     | `const { copy, paste, copied } = useClipboard();`                                             |
 | [useRageClick](#userageclick)                     | `useRageClick(ref, { onRageClick, threshold: 5 });`                                           |
 | [useThreadedWorker](#usethreadedworker)           | `const { run, loading, result } = useThreadedWorker(fn, { mode: 'sequential' });`             |
@@ -347,6 +359,105 @@ function EnvironmentBadge() {
 ```
 
 See [full `useDeviceData` docs](#usedevicedata) for all fields, `getDeviceData()`, and `parseUserAgent()`.
+
+---
+
+### `useDebounce`
+
+Delays updating a value, or executing a function, until `delay` milliseconds have passed without further changes. Default delay: `300`.
+
+- **Value:** returns the last value after the quiet period.
+- **Function:** returns a stable debounced callback with `cancel()` and `flush()`.
+
+```tsx
+import { useState, useEffect } from "preact/hooks";
+import { useDebounce } from "preact-missing-hooks";
+
+function SearchField() {
+  const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounce(query, 300);
+
+  useEffect(() => {
+    if (debouncedQuery) fetchResults(debouncedQuery);
+  }, [debouncedQuery]);
+
+  return <input value={query} onInput={(e) => setQuery(e.currentTarget.value)} />;
+}
+
+function Autosave({ text }) {
+  const save = useDebounce((value: string) => {
+    api.save(value);
+  }, 400);
+
+  return <textarea onInput={(e) => save(e.currentTarget.value)} />;
+}
+```
+
+---
+
+### `useIdle`
+
+Detects when the user has been inactive for `timeout` milliseconds (default: `60000`). Activity is inferred from window events (`mousemove`, `mousedown`, `keydown`, `touchstart`, `wheel`, `resize`) and when the tab becomes visible again.
+
+Returns `idle`, `lastActive` (timestamp), and `reset()` to treat the current moment as activity.
+
+```tsx
+import { useIdle } from "preact-missing-hooks";
+
+function IdleBanner() {
+  const { idle, lastActive, reset } = useIdle(5000);
+
+  return (
+    <div>
+      {idle ? "Away" : "Active"} · last active{" "}
+      {new Date(lastActive).toLocaleTimeString()}
+      <button onClick={reset}>I'm here</button>
+    </div>
+  );
+}
+```
+
+---
+
+### `useClickOutside`
+
+Calls `handler` when a pointer event happens outside the given element (or elements). Useful for closing dropdowns, modals, and popovers. Options: `events` (default `mousedown` + `touchstart`), `enabled`.
+
+```tsx
+import { useRef, useState } from "preact/hooks";
+import { useClickOutside } from "preact-missing-hooks";
+
+function Dropdown() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(true);
+
+  useClickOutside(ref, () => setOpen(false));
+
+  if (!open) return <button onClick={() => setOpen(true)}>Open</button>;
+  return <div ref={ref}>Menu</div>;
+}
+```
+
+---
+
+### `useMediaQuery`
+
+Tracks whether a CSS media query currently matches. Updates when the viewport or user preferences change. Optional second argument is the SSR / unavailable fallback (default: `false`).
+
+```tsx
+import { useMediaQuery } from "preact-missing-hooks";
+
+function ResponsiveNav() {
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const prefersDark = useMediaQuery("(prefers-color-scheme: dark)");
+
+  return (
+    <nav data-narrow={isMobile} data-theme={prefersDark ? "dark" : "light"}>
+      {isMobile ? "Mobile nav" : "Desktop nav"}
+    </nav>
+  );
+}
+```
 
 ---
 

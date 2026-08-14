@@ -40,12 +40,16 @@ Open `docs/index.html` in a browser that supports ES modules and import maps. Th
 | **useEventBus**            | Emit “greet” and see the message in another part of the UI.                                                                                                                                           |
 | **useWrappedChildren**     | Children buttons get injected styles.                                                                                                                                                                 |
 | **usePreferredTheme**      | Shows light / dark / no-preference from system.                                                                                                                                                       |
+| **useMediaQuery**          | Shows whether `(max-width: 768px)` and `prefers-color-scheme: dark` currently match. Resize or change theme to see updates.                                                                            |
 | **useNetworkState**        | Online/offline and connection type.                                                                                                                                                                   |
 | **useDeviceData**          | Live browser/OS name & version (Client Hints + UA parse), language, CPUs, memory, viewport, screen, touch, theme prefs, UA brands, optional battery.                                                    |
 | **usePrefetch**            | Hover or click to prefetch a URL (document or fetch); see prefetched status.                                                                                                                          |
 | **usePoll**                | Poll until done (3 ticks); see poll count and result. Stop button to cancel.                                                                                                                          |
+| **useDebounce**            | Type in the input; live text updates immediately, debounced value and function-call count update after 400ms of no typing.                                                                              |
+| **useIdle**                | Stay still for 3s to see Idle; move the mouse or click Reset to become Active.                                                                                                                        |
 | **useClipboard**           | Copy and paste; see “Copied!” and pasted text.                                                                                                                                                        |
 | **useRageClick**           | Click the area 3+ times quickly; rage click count.                                                                                                                                                    |
+| **useClickOutside**        | Click outside the highlighted box to close it; Open box to show it again.                                                                                                                             |
 | **useThreadedWorker**      | Run a task; see loading and result.                                                                                                                                                                   |
 | **useIndexedDB**           | Insert, bulk insert, query, update, delete, clear.                                                                                                                                                    |
 | **useWebRTCIP**            | Detect IP via WebRTC (may take a few seconds).                                                                                                                                                        |
@@ -205,6 +209,15 @@ The **useLLMMetadata** Live panel simulates route changes. Click “Route: /”,
 2. Injects a new script with `type="application/llm+json"` containing `route`, `title`, `description`, `tags`, and `generatedAt`.
 
 Inspect the page’s `<head>` in DevTools to see the script. The Live panel shows a short summary of the injected payload. The hook never throws: passing `null` or `undefined` as config is safe and yields a minimal payload with `route: "/"` and `generatedAt`.
+
+### useDebounce / useIdle / useClickOutside / useMediaQuery
+
+The demo also includes live panels for:
+
+- **useDebounce** — type in the input; the live value updates immediately, the debounced value and function-call count update after 400ms of quiet.
+- **useIdle** — stay still for 3 seconds to see Idle; move the mouse or click Reset to become Active.
+- **useClickOutside** — click outside the highlighted box to close it, then Open box to show it again.
+- **useMediaQuery** — resize the window or change the system color scheme to see `(max-width: 768px)` and `prefers-color-scheme: dark` match state.
 
 ---
 
