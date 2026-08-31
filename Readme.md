@@ -7,6 +7,12 @@
   <a href="https://www.npmjs.com/package/preact-missing-hooks">
     <img src="https://img.shields.io/npm/dt/preact-missing-hooks?label=total%20downloads" alt="total downloads" />
   </a>
+  <a href="https://www.jsdelivr.com/package/npm/preact-missing-hooks">
+    <img src="https://img.shields.io/jsdelivr/npm/hm/preact-missing-hooks?label=jsdelivr%20monthly" alt="jsDelivr monthly downloads" />
+  </a>
+  <a href="https://www.jsdelivr.com/package/npm/preact-missing-hooks">
+    <img src="https://data.jsdelivr.com/v1/stats/packages/npm/preact-missing-hooks/badge?type=hits&period=all" alt="jsDelivr total downloads" />
+  </a>
 
   <a href="https://github.com/prakhardubey2002/preact-missing-hooks/actions/workflows/test-hooks.yml">
     <img src="https://img.shields.io/github/actions/workflow/status/prakhardubey2002/preact-missing-hooks/test-hooks.yml?branch=main&label=build%20status" alt="Build Status" />
