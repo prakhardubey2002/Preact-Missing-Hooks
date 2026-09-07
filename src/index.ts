@@ -21,3 +21,4 @@ export * from "./useDebounce";
 export * from "./useIdle";
 export * from "./useClickOutside";
 export * from "./useMediaQuery";
+export * from "./useHoneypot";
