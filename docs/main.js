@@ -28,6 +28,7 @@ const {
   useIdle,
   useClickOutside,
   useMediaQuery,
+  useHoneypot,
 } = await import(
   isLocal ? '../dist/index.module.js' : 'https://unpkg.com/preact-missing-hooks/dist/index.module.js'
 );
@@ -643,6 +644,78 @@ function DemoMediaQuery() {
   );
 }
 
+function DemoHoneypot() {
+  const [msg, setMsg] = useState('');
+  const [action, setAction] = useState('block');
+  const { honeypotProps, protect, triggered, lastTrigger, reset } = useHoneypot({
+    action,
+    minTimeMs: 600,
+    onTrigger: ({ reason }) => setMsg('Triggered: ' + reason),
+  });
+  const onSubmit = protect((e) => {
+    e.preventDefault();
+    setMsg('Form accepted (human)');
+  });
+  return h('div', {},
+    h('div', { style: { marginBottom: '0.5rem', fontSize: '0.85rem' } }, [
+      h('label', { style: { marginRight: '0.5rem' } }, 'Action: '),
+      h('select', {
+        value: action,
+        onChange: (e) => { setAction(e.currentTarget.value); reset(); setMsg(''); },
+        style: {
+          padding: '0.25rem 0.4rem',
+          borderRadius: '6px',
+          border: '1px solid var(--border)',
+          background: 'var(--surface2)',
+          color: 'var(--text)',
+        },
+      }, [
+        h('option', { value: 'block' }, 'block'),
+        h('option', { value: 'silent' }, 'silent'),
+        h('option', { value: 'allow' }, 'allow'),
+      ]),
+      ' ',
+      h('button', { type: 'button', onClick: () => { reset(); setMsg(''); } }, 'Reset'),
+    ]),
+    h('form', { onSubmit, style: { position: 'relative' } }, [
+      h('input', { ...honeypotProps }),
+      h('input', {
+        name: 'email',
+        placeholder: 'Email',
+        style: {
+          padding: '0.4rem 0.6rem',
+          borderRadius: '6px',
+          border: '1px solid var(--border)',
+          background: 'var(--surface2)',
+          color: 'var(--text)',
+          marginRight: '0.35rem',
+          maxWidth: '12rem',
+        },
+      }),
+      h('button', { type: 'submit' }, 'Submit'),
+      h('button', {
+        type: 'button',
+        style: { marginLeft: '0.35rem' },
+        onClick: (e) => {
+          const form = e.currentTarget.closest('form');
+          const el = form && form.querySelector('input[name="' + honeypotProps.name + '"]');
+          if (el) {
+            el.value = 'http://bot.example';
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          setMsg('Filled decoy (simulate bot) — submit again');
+        },
+      }, 'Fill honeypot'),
+    ]),
+    h('div', { class: 'status', style: { marginTop: '0.5rem' } },
+      triggered
+        ? h('span', { class: 'badge amber' }, 'Bot flagged' + (lastTrigger ? ' · ' + lastTrigger.reason : ''))
+        : h('span', { class: 'badge green' }, 'Clean'),
+      msg ? h('span', { style: { marginLeft: '0.5rem' } }, msg) : null
+    )
+  );
+}
+
 // ——— Page data: heading, flow, summary, code, LiveComponent ———
 
 const HOOKS = [
@@ -750,6 +823,13 @@ const HOOKS = [
     summary: 'Detects clicks outside a specified element, useful for closing dropdowns, modals, and popovers.',
     code: `useClickOutside(ref, () => setOpen(false));`,
     Live: DemoClickOutside,
+  },
+  {
+    name: 'useHoneypot',
+    flow: 'form → useHoneypot() → hidden decoy + protect(onSubmit) → block | silent | allow',
+    summary: 'Minimal honeypot for forms: hidden decoy field + optional too-fast check. Choose action when tripped.',
+    code: `const { honeypotProps, protect, triggered } = useHoneypot({ action: 'block', onTrigger });\n<form onSubmit={protect(onSubmit)}><input {...honeypotProps} />…</form>`,
+    Live: DemoHoneypot,
   },
   {
     name: 'useThreadedWorker',

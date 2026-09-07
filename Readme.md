@@ -21,7 +21,7 @@
 
 If this package helps you, please consider dropping a star on the [GitHub repo](https://github.com/prakhardubey2002/Preact-Missing-Hooks).
 
-A lightweight, extendable collection of React-like hooks for Preact, including utilities for transitions, DOM mutation observation, global event buses, theme detection, network status, clipboard access, debounce, idle detection, click-outside, media queries, rage-click detection (e.g. for Sentry), a priority task queue (sequential or parallel), a production-ready **IndexedDB** hook with tables, transactions, and a full CRUD API, and **WebRTC-based IP detection** (`useWebRTCIP`) for frontend-only IP hints.
+A lightweight, extendable collection of React-like hooks for Preact, including utilities for transitions, DOM mutation observation, global event buses, theme detection, network status, clipboard access, debounce, idle detection, click-outside, media queries, form honeypots, rage-click detection (e.g. for Sentry), a priority task queue (sequential or parallel), a production-ready **IndexedDB** hook with tables, transactions, and a full CRUD API, and **WebRTC-based IP detection** (`useWebRTCIP`) for frontend-only IP hints.
 
 ---
 
@@ -40,6 +40,7 @@ A lightweight, extendable collection of React-like hooks for Preact, including u
 - **`useIdle`** — Detects when a user has been inactive for a specified period of time. Returns `idle`, `lastActive`, and `reset()`.
 - **`useClickOutside`** — Detects clicks outside a specified element, useful for closing dropdowns, modals, and popovers.
 - **`useMediaQuery`** — Tracks whether a CSS media query currently matches the browser environment.
+- **`useHoneypot`** — Minimal form honeypot: hidden decoy field (+ optional too-fast submit check). Actions: `block`, `silent`, or `allow`, with `onTrigger` callback.
 - **`useClipboard`** — Copy and paste text with the Clipboard API, with copied/error state.
 - **`useRageClick`** — Detects rage clicks (repeated rapid clicks in the same spot). Use with Sentry or similar to detect and fix rage-click issues and lower rage-click-related support.
 - **`useThreadedWorker`** — Run async work in a queue with **sequential** (single worker, priority-ordered) or **parallel** (worker pool) mode. Optional priority (1 = highest); FIFO within same priority.
@@ -93,12 +94,13 @@ import { useThreadedWorker, useClipboard } from "preact-missing-hooks";
   import { useIdle } from "preact-missing-hooks/useIdle";
   import { useClickOutside } from "preact-missing-hooks/useClickOutside";
   import { useMediaQuery } from "preact-missing-hooks/useMediaQuery";
+  import { useHoneypot } from "preact-missing-hooks/useHoneypot";
   import { useWebRTCIP } from "preact-missing-hooks/useWebRTCIP";
   import { useWasmCompute } from "preact-missing-hooks/useWasmCompute";
   import { useWorkerNotifications } from "preact-missing-hooks/useWorkerNotifications";
   ```
 
-  All hooks are available: `useTransition`, `useMutationObserver`, `useEventBus`, `useWrappedChildren`, `usePreferredTheme`, `useNetworkState`, `useClipboard`, `usePrefetch`, `usePoll`, `useDeviceData`, `useDebounce`, `useIdle`, `useClickOutside`, `useMediaQuery`, `useRageClick`, `useThreadedWorker`, `useIndexedDB`, `useWebRTCIP`, `useWasmCompute`, `useWorkerNotifications`, `useLLMMetadata`, `useRefPrint`, `useRBAC`.
+  All hooks are available: `useTransition`, `useMutationObserver`, `useEventBus`, `useWrappedChildren`, `usePreferredTheme`, `useNetworkState`, `useClipboard`, `usePrefetch`, `usePoll`, `useDeviceData`, `useDebounce`, `useIdle`, `useClickOutside`, `useMediaQuery`, `useHoneypot`, `useRageClick`, `useThreadedWorker`, `useIndexedDB`, `useWebRTCIP`, `useWasmCompute`, `useWorkerNotifications`, `useLLMMetadata`, `useRefPrint`, `useRBAC`.
 
 ---
 
@@ -168,6 +170,7 @@ Or open `docs/index.html` after building (see [docs/README.md](docs/README.md) f
 | [useIdle](#useidle)                               | `const { idle, lastActive, reset } = useIdle(5000);`                                          |
 | [useClickOutside](#useclickoutside)               | `useClickOutside(ref, () => setOpen(false));`                                                 |
 | [useMediaQuery](#usemediaquery)                   | `const isMobile = useMediaQuery("(max-width: 768px)");`                                       |
+| [useHoneypot](#usehoneypot)                       | `const { honeypotProps, protect } = useHoneypot({ action: "block" });`                        |
 | [useClipboard](#useclipboard)                     | `const { copy, paste, copied } = useClipboard();`                                             |
 | [useRageClick](#userageclick)                     | `useRageClick(ref, { onRageClick, threshold: 5 });`                                           |
 | [useThreadedWorker](#usethreadedworker)           | `const { run, loading, result } = useThreadedWorker(fn, { mode: 'sequential' });`             |
@@ -461,6 +464,51 @@ function ResponsiveNav() {
     <nav data-narrow={isMobile} data-theme={prefersDark ? "dark" : "light"}>
       {isMobile ? "Mobile nav" : "Desktop nav"}
     </nav>
+  );
+}
+```
+
+---
+
+### `useHoneypot`
+
+Minimal honeypot for forms: a visually hidden decoy field (humans leave empty; bots often fill) plus an optional too-fast submit check. Wrap your submit handler with `protect()`.
+
+**Options**
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `name` | `"website"` | Decoy input name |
+| `minTimeMs` | `800` | Reject if submitted sooner; `0` disables |
+| `action` | `"block"` | `"block"` — skip handler + `preventDefault`; `"silent"` — skip handler only; `"allow"` — still run handler |
+| `onTrigger` | — | Called with `{ reason, value, elapsedMs }` when tripped (`filled` \| `too-fast`) |
+
+```tsx
+import { useHoneypot } from "preact-missing-hooks";
+
+function ContactForm() {
+  const { honeypotProps, protect, triggered } = useHoneypot({
+    action: "block",
+    minTimeMs: 800,
+    onTrigger: ({ reason }) => {
+      // e.g. analytics / rate-limit signal
+      console.warn("honeypot:", reason);
+    },
+  });
+
+  const onSubmit = protect((e) => {
+    e.preventDefault();
+    // real submit — only runs when the honeypot is clean
+    sendMessage();
+  });
+
+  return (
+    <form onSubmit={onSubmit} style={{ position: "relative" }}>
+      <input {...honeypotProps} />
+      <input name="email" type="email" required />
+      <button type="submit">Send</button>
+      {triggered && <p>Submission blocked.</p>}
+    </form>
   );
 }
 ```

@@ -1,121 +1,160 @@
 Package: preact-missing-hooks
-Version: 4.9.0
+Version: 4.11.0
 
 Description:
 A lightweight, extendable collection of missing React-like hooks for Preact — plus fresh, powerful new ones designed specifically for modern Preact apps.
 
-Summary:
-Preact-Missing-Hooks is a lightweight, extendable collection of React-like hooks for Preact that fills gaps left by Preact's limited built-in hook set. It provides modern hooks for tasks like transitions, mutation observation, event bus communication, theme detection, network state monitoring, clipboard access, WebRTC IP discovery, WebAssembly computation, IndexedDB storage, rage-click detection, prefetching, debouncing, idle detection, and more. The package bridges the gap between Preact and React's hook ecosystem, making it easy to adopt familiar patterns across both libraries.
-
-When to use:
-Choose Preact-Missing-Hooks when building modern Preact applications that require advanced, React-like hooks not natively available in Preact, or when you need specialized capabilities such as transition coordination, mutation observation, event bus communication, theme detection, network state monitoring, clipboard management, WebRTC IP discovery, WebAssembly computation, IndexedDB access, rage-click detection, prefetching, debouncing, idle detection, and media query awareness. It is ideal for developers working on feature-rich Preact projects who want to leverage a broad, well-tested hook library that works seamlessly with both Preact and React.
-
-Reason to use:
-- Provides missing React-like hooks for Preact
-- Offers powerful new hooks for modern web features like WebRTC, WebAssembly, IndexedDB, and more
-- Lightweight and extendable design
-- Framework-agnostic compatibility with both Preact and React
-- Production-ready with full TypeScript support
-
-Use cases:
-- Implementing useTransition for smooth UI updates during async operations
-- Using useMutationObserver to track DOM mutations and trigger side effects
-- Leveraging useEventBus for cross-component event communication
-- Detecting user rage-clicks with useRageClick for UX feedback
-- Storing and querying data via useIndexedDB for offline-first applications
-- Monitoring network connectivity with useNetworkState for offline handling
-- Managing clipboard interactions with useClipboard for rich text editing
-- Wrapping components with useWrappedChildren to inject shared context
-- Reading system preferences with usePreferredTheme for light/dark mode
-- Debouncing inputs with useDebounce for search or autosave functionality
-- Detecting user inactivity with useIdle for session timeouts
-- Closing modals and dropdowns with useClickOutside
-- Responsive layout adjustments with useMediaQuery for breakpoint handling
-
-Side effects:
-- reads process.env
-- modifies DOM
-
-Keywords:
-preact, hooks, react-hooks, useTransition, useMutationObserver, useEventBus, useWrappedChildren, usePreferredTheme, useNetworkState, useClipboard, useRageClick, useThreadedWorker, useIndexedDB, useWebRTCIP, useWasmCompute, useWorkerNotifications, useRefPrint, useRBAC, usePrefetch, useDebounce, useIdle, useClickOutside, useMediaQuery, typescript, modern-web, web-development, frontend, ui-components
-
-
-Documentation:
-See README
-
-Related packages:
-preact, react, react-hooks, preact/hooks, preact/compat
-
 Exports:
-- useClickOutside (Hook) : Sets up a listener that detects when a click occurs outside the bounds of the component. The returned cleanup function cancels the listener, preventing memory leaks and ensuring the component doesn't react to clicks elsewhere. — params: handler: (event: MouseEvent) => void, target: HTMLElement | null — returns: Cleanup function to remove the click-outside listener — e.g. useClickOutside((e) => console.log('clicked outside', e.target));
-// Clean up when component unmounts
-- useClipboard (Hook) : Exposes clipboard read/write capabilities for sharing content between components. It abstracts the native Clipboard API into a simple interface that works consistently across browsers. — params: none — returns: object with read and write methods — e.g. const { read, write } = useClipboard();
-const text = await read();
-await write(text);
-- useDebounce (Hook) : Creates a debounced wrapper around a function call, delaying execution by a specified number of milliseconds before invoking the handler. This prevents excessive re-renders or API calls during rapid events like typing or scrolling. — params: delay: number, fn: (...args: any[]) => any — returns: Function that wraps the original function with debounce logic — e.g. const debouncedSave = useDebounce(1000, () => saveToServer(data));
-// Call debouncedSave frequently but it only runs after 1 second of inactivity
-- useDeviceData (Hook) : Retrieves device-specific information such as screen dimensions, orientation, language, and time zone. This hook provides access to hardware-level properties that can inform responsive UI design and localization logic within a Preact component. — params: none — returns: Object containing deviceInfo with properties like width, height, orientation, lang, timezone, etc. — e.g. const { width, height, orientation } = useDeviceData();
-console.log(`Screen is ${orientation}`);
-- useEventBus (Hook) : Provides an event bus pattern for broadcasting and subscribing to custom events across components. Components can emit events and listen for specific types, enabling loose coupling between unrelated parts of the app. — params: none — returns: eventEmitter object with emit() and subscribe() methods — e.g. const bus = useEventBus();
-bus.emit('dataUpdated', payload);
-bus.subscribe('dataUpdated', (data) => console.log(data));
-- useIdle (Hook) : Checks whether the component is currently idle (i.e., not mounted or not rendering). This hook is useful for lazy initialization or deferring expensive operations until the component has finished mounting. — params: none — returns: Boolean indicating if the component is idle — e.g. if (await useIdle()) {
-  // Perform heavy computation now that we know the component is ready
-}
-- useIndexedDB (Hook) : Offers a simplified interface to the IndexedDB browser API for persistent client-side storage. This export wraps common IndexedDB operations like opening databases, adding/removing records, and querying data. — params: dbName?: string, storeName?: string — returns: An IDBObjectStore or database reference — e.g. const { db } = useIndexedDB('my-db', 'users'); const newUser = await db.add({ name: 'Alice' });
-- useMediaQuery (Hook) : Queries CSS media query values such as screen width, height, and resolution. This hook allows components to respond to layout changes across different devices and viewport sizes dynamically. — params: query: string, unit?: 'px' | 'em' | 'rem' | 'vw' | 'vh' — returns: Boolean indicating whether the current media query condition matches — e.g. const isMobile = useMediaQuery('max-width: 768px');
-if (isMobile) <button>Mobile layout</button>;
-- useMutationObserver (Hook) : Observes DOM mutation events and provides callbacks for changes such as element additions, removals, or attribute updates. Useful for implementing reactive UI that responds to structural changes in the document. — params: null — returns: object containing observer instance, mutation callbacks, and cleanup function — e.g. const { mutate } = useMutationObserver();
-mutate.addEventListener('change', (e) => {
-  console.log('DOM changed:', e.target);
-});
-- useNetworkState (Hook) : Tracks the network connectivity status (online/offline) and provides a way to reactively update UI based on connection changes. It integrates with browser APIs to detect network availability and handles reconnection logic. — params: initialState?: boolean — returns: object with isOnline flag, connect callback, and disconnect callback — e.g. const { isOnline, connect, disconnect } = useNetworkState();
-connect().then(() => console.log('Connected'));
-if (!isOnline) { /* show offline indicator */ }
-- usePoll (Hook) : A hook that creates a periodic polling effect running at a specified interval. It executes a provided callback function repeatedly until the component unmounts or the interval is cleared, making it useful for background tasks like data fetching or timers. — params: callback: (intervalMs: number) => () => void, options: { intervalMs?: number, id?: string } — returns: Function that returns an ID for cancellation and the current state — e.g. const { id } = usePoll(() => console.log('polled', Date.now()));
-// Clean up with id when needed
+- ClickOutsideEvent
+- ClickOutsideTarget
+- ConnectionType : Network connection type (e.g., wifi, cellular)
+- DebouncedFunction
+- DeviceBatteryInfo : Battery status from the Battery Status API when available
+- DeviceBrowserInfo : Detected browser name and version
+- DeviceData : Snapshot of device / browser data from native Navigator and related APIs
+- DeviceOsInfo : Detected operating system name and version
+- DeviceScreenInfo : Screen and display metrics from `screen` and `window`
+- DeviceViewportInfo : Viewport size (`window.innerWidth` / `innerHeight`)
+- EffectiveConnectionType : Effective connection type from Network Information API
+- getDeviceData : Reads synchronous device / browser data from Navigator, Screen, and matchMedia.
+- HoneypotAction
+- HoneypotFieldProps
+- HoneypotTriggerInfo
+- HoneypotTriggerReason
+- IDBController : Database controller built from an open IDBDatabase.
+Exposes table(name) and transaction(...).
+- IndexedDBConfig : Configuration passed to useIndexedDB.
+- InjectableProps
+- LLMConfig : Config for the useLLMMetadata hook. All fields optional except route.
+- LLMPayload : Payload injected as JSON in the LLM script tag. Only includes defined, safe values.
+- NetworkState
+- OGType : Open Graph / content type for og:type.
+- parseUserAgent : Parse browser and OS from a user-agent string (sync fallback).
+- PreferredTheme
+- RageClickPayload
+- RBACAuthState : Get auth state (user + optional roles/capabilities). Used by custom source.
+- RBACCapabilitiesOverride : Optional override: get capabilities directly (e.g. from API) instead of deriving from roles.
+- RBACRoleCapabilities : Role name -> list of capability strings. Use '*' for full access.
+- RBACRoleDefinition : Role definition: name + condition to grant this role based on user.
+- RBACUser : Flexible user object; your app can use any shape.
+- RBACUserSource : Pluggable source for current user (and optionally roles/capabilities).
+- RunOptions
+- ThreadedWorkerMode
+- useClickOutside (Hook) : A Preact hook that calls `handler` when a pointer event happens outside the
+given element (or elements). Useful for closing dropdowns, modals, and popovers.
+- UseClickOutsideOptions
+- useClipboard (Hook) : A Preact hook for reading and writing the clipboard. Uses the async
+Clipboard API when available (requires secure context and user gesture).
+- UseClipboardOptions
+- UseClipboardReturn
+- useDebounce (Hook) : A Preact hook that delays updating a value, or executing a function, until
+`delay` milliseconds have passed without further changes/calls.
+- useDeviceData (Hook) : Extracts device and browser data from native Navigator, Screen, window, and
+matchMedia APIs. Updates on resize, orientation, online/offline, and
+prefers-color-scheme / prefers-reduced-motion changes. Optionally polls the
+Battery Status API when available.
+- UseDeviceDataOptions
+- useEventBus (Hook) : A Preact hook to publish and subscribe to custom events across components.
+- useHoneypot (Hook) : Minimal honeypot protection for forms. Renders a hidden decoy field humans
+ignore; bots often fill it. Optionally rejects submissions that happen too
+fast after mount.
+- UseHoneypotOptions
+- UseHoneypotReturn
+- useIdle (Hook) : A Preact hook that detects when the user has been inactive for `timeout`
+milliseconds. Activity is inferred from window events (mouse, keyboard, touch, etc.).
+- UseIdleOptions
+- UseIdleReturn
+- useIndexedDB (Hook) : Opens an IndexedDB database and returns a controller for tables and transactions.
+Handles onupgradeneeded: creates object stores and indexes from config.
+Connection is a singleton per (config.name, config.version).
+- UseIndexedDBReturn
+- useLLMMetadata (Hook) : Production-ready hook: injects an AI-readable metadata block into the document head
+when the route changes. Framework-agnostic (React 18+ and Preact 10+ via aliasing).
 
-- usePreferredTheme (Hook) : Selects and applies a preferred color scheme (light or dark) based on user preferences or system settings. It reads the current theme preference and ensures consistent visual styling throughout the application. — params: themeKey?: string, initialTheme?: string — returns: object containing active theme, toggle function, and theme class names — e.g. const { theme, toggleTheme } = usePreferredTheme('dark'); 
-return <div className={`${theme} container`} />;
-- usePrefetch (Hook) : Optimizes network requests by prefetching resources ahead of time based on component interaction patterns. This export helps reduce perceived latency by proactively loading data when users navigate toward it. — params: resource?: URL, trigger?: boolean — returns: Promise resolving when prefetch completes — e.g. await usePrefetch('/api/users')(); // Data loaded before view switch
-- useRageClick (Hook) : Integrates with the Rage library to capture and process click events at a high performance level. It provides a stable click handler that works well with Rage's virtual DOM and can be used for complex interaction patterns. — params: onClick?: (event: MouseEvent) => void — returns: function that registers the click handler with Rage — e.g. const onClick = useRageClick((e) => {
-  console.log('Clicked:', e.target);
-});
-// Rage automatically attaches onClick to clickable nodes
-- useRBAC (Hook) : Implements role-based access control logic for component rendering and actions. This export provides middleware-like checks that can restrict access based on user roles before executing component logic. — params: roles?: Array<string>, permission?: string — returns: Boolean indicating if access is granted — e.g. const hasAccess = useRBAC(['admin'], 'edit'); if (hasAccess) renderEditor();
-- useRefPrint (Hook) : A debugging utility that prints the current value of a ref to the console. Useful during development to inspect component state and props without modifying code. — params: ref: Ref<any> — returns: Console log of the ref value — e.g. useRefPrint(myRef); // Prints myRef.current to console
-- useThreadedWorker (Hook) : Provides access to a threaded worker instance within Preact components, enabling off-main-thread computation for heavy tasks. Use this when you need to perform CPU-intensive work that shouldn't block the UI thread. — params: None required - automatically available in supported environments — returns: A Worker instance or null if not available — e.g. const { worker } = useThreadedWorker(); await worker.postMessage('data');
-- useTransition (Hook) : Manages asynchronous transitions by pausing rendering until a transition completes, preventing UI flickering during long-running operations. It provides a ref to track the current transition state and allows resetting the transition after completion. — params: none — returns: object with current state (started, completed, cancelled) and a reset function — e.g. const [transition] = useTransition(); await transition.start(); // renders while transitioning
-if (transition.completed) { /* handle result */ }
-- useWasmCompute (Hook) : Enables execution of WebAssembly modules for compute-heavy operations within Preact components. This export handles module loading and invocation, providing a bridge between JavaScript and compiled WASM code. — params: modulePath?: string, options?: { wasmOptions: Object } — returns: A WasmInstance or handle to invoke functions — e.g. const { wasm } = useWasmCompute('./compute.wasm'); wasm.invoke('processData');
-- useWebRTCIP (Hook) : Detects and manages WebRTC IP addresses for peer-to-peer communication. This export provides utilities to get public/private IPs used by WebRTC connections, essential for NAT traversal and signaling. — params: peerId?: string, ipType?: 'public'|'private' — returns: IP address object containing ip, port, and protocol information — e.g. const ip = useWebRTCIP('peer-123'); console.log(ip.ip);
-- useWorkerNotifications (Hook) : Manages notification messaging between web workers and the main thread. This export allows sending messages from workers back to the parent component via postMessage or event listeners. — params: channel?: string — returns: A subscription to worker notifications — e.g. useWorkerNotifications().then(sub => sub.on('message', msg => console.log(msg)));
-- useWrappedChildren (Hook) : Wraps child components with additional logic such as memoization, prop normalization, or effect injection before rendering. It intercepts the render cycle of children to enhance their behavior within the parent. — params: children: React.ReactNode, options?: object — returns: ReactElement representing the wrapped child component — e.g. const WrappedChild = useWrappedChildren(<MyComponent />);
-return <WrappedChild />;
+- Rich structure: route, title, description, tags, outline (auto), canonicalUrl, language,
+  ogType, ogImage, ogImageAlt, siteName, author, publishedTime, modifiedTime, robots, extra.
+- Safe usage: never throws; invalid/missing config is normalized; DOM and JSON are guarded.
+- Cacheable: if the generated payload is unchanged, the script is not replaced.
+- SSR-safe: no-op when window/document is undefined.
+- Cleans up on unmount (removes the script).
+- useMediaQuery (Hook) : A Preact hook that tracks whether a CSS media query currently matches.
+Updates reactively when the viewport or user preferences change.
+- useMutationObserver (Hook) : A Preact hook to observe DOM mutations using MutationObserver.
+- UseMutationObserverOptions
+- useNetworkState (Hook) : A Preact hook that returns the current network state, including online/offline
+status and (when supported) connection type, downlink, RTT, and save-data preference.
+Updates reactively when the network state changes.
+- usePoll (Hook) : Polls an async function at a fixed interval until it returns { done: true, data? }.
+Useful for waiting on a backend job, readiness checks, or until a condition is met.
+- UsePollOptions
+- UsePollResult
+- usePreferredTheme (Hook) : A Preact hook that returns the user's preferred color scheme based on the
+`prefers-color-scheme` media query. Updates reactively when the user changes
+their system or browser theme preference.
+- usePrefetch (Hook) : A Preact hook that returns a stable prefetch function to preload URLs (documents or data)
+so they are cached before the user navigates or needs them. Useful for link hover or
+route preloading.
+- UsePrefetchOptions
+- UsePrefetchReturn
+- useRageClick (Hook) : Detects "rage clicks" (repeated rapid clicks in the same area), e.g. when the UI
+is unresponsive. Use the callback to report to Sentry or similar tools to surface
+rage click issues and lower rage-click-related support.
+- UseRageClickOptions
+- UserAgentDataInfo : Parsed Client Hints from `navigator.userAgentData` when available
+- useRBAC (Hook) : Frontend-only role-based access control hook. Define roles with conditions,
+assign capabilities per role, and plug in user source (localStorage, sessionStorage, API, or custom).
+Supports full flexibility: frontend-only with storage or pluggable API.
+- UseRBACOptions
+- UseRBACReturn
+- useRefPrint (Hook) : A Preact hook that binds a ref to a printable section and provides a function
+to print only that section using the native window.print() and
+- UseRefPrintOptions
+- UseRefPrintReturn
+- useThreadedWorker (Hook) : Production-grade hook to run async work in a queue with optional priority
+and either sequential or parallel execution.
+- UseThreadedWorkerOptions
+- UseThreadedWorkerReturn
+- useTransition (Hook) : Mimics React's useTransition hook in Preact.
+- useWasmCompute (Hook) : Runs WebAssembly computation in a Web Worker. Validates environment (browser, Worker, WebAssembly)
+and returns a stable compute function plus result/loading/error/ready state.
+- UseWasmComputeOptions
+- UseWasmComputeReturn
+- useWebRTCIP (Hook) : Attempts to detect client IP addresses using WebRTC ICE candidates and a STUN server.
+Works frontend-only (no backend). Not guaranteed to return a public IP; use as a hint and
+fall back to a public IP API (e.g. ipapi.co, ip-api.com) if you need reliability.
+- UseWebRTCIPOptions
+- UseWebRTCIPReturn
+- useWorkerNotifications (Hook) : Listens to a Worker's messages and maintains state: running tasks, completed/failed counts,
+event history, execution time per task, average duration, throughput per second, and queue size.
+Worker should postMessage with: { type: 'task_start'|'task_end'|'task_fail'|'queue_size', taskId?, duration?, error?, size? }.
+- UseWorkerNotificationsOptions
+- UseWorkerNotificationsReturn
+- useWrappedChildren (Hook) : A Preact hook to wrap children components and inject additional props into them.
+- WorkerEventType : Supported worker event types for tracking. Worker should postMessage with these shapes.
+- WorkerNotificationEvent
 
 Hooks:
-- useTransition
-- useMutationObserver
-- useEventBus
-- useWrappedChildren
-- usePreferredTheme
-- useNetworkState
-- useClipboard
-- useRageClick
-- useThreadedWorker
-- useIndexedDB
-- useWebRTCIP
-- useWasmCompute
-- useWorkerNotifications
-- useRefPrint
-- useRBAC
-- usePrefetch
-- usePoll
-- useDeviceData
-- useDebounce
-- useIdle
 - useClickOutside
+- useClipboard
+- useDebounce
+- useDeviceData
+- useEventBus
+- useHoneypot
+- useIdle
+- useIndexedDB
+- useLLMMetadata
 - useMediaQuery
-
-Frameworks:
-preact, react
+- useMutationObserver
+- useNetworkState
+- usePoll
+- usePreferredTheme
+- usePrefetch
+- useRBAC
+- useRageClick
+- useRefPrint
+- useThreadedWorker
+- useTransition
+- useWasmCompute
+- useWebRTCIP
+- useWorkerNotifications
+- useWrappedChildren
